@@ -5,7 +5,7 @@ format:
     embed-resources: true
     toc: true
     theme: cerulean
-author: FIRST LAST
+author: Bishal Gaire and Meghan Stewart 
 ---
 
 # A. Introduction  
@@ -261,10 +261,59 @@ glimpse(data_model[, c("date_planted", "date_harvested", "planting_month", "harv
 data_model <- data_model %>%
 mutate(days_to_harvest = as.numeric(date_harvested - date_planted))
 summary(data_model$days_to_harvest)
+
 ```
 ```{r}
 ggplot(data_model, aes(x = days_to_harvest, y = yield_mg_ha)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm")
+```
+The above plot does not suggest a clear linear relationship between days to harvest and yield given the variability in the data points. 
+```{r}
+
+ggplot(data_model, aes(x = planting_month, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+
+```
+```{r}
+
+ggplot(data_model, aes(x = harvest_month, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+
+```
+
+```{r}
+ggplot(data_model, aes(x = factor(harvest_month), y = yield_mg_ha)) +
+  geom_boxplot()
+```
+
+While no strong pattern in yield based on plant month or harvest month is observed above, the range for maximum values seems to trend upward as harvest month increases to later, with higher value outliers around months 9 and 10. 
+
+Let's look at how latitude and longitude impact yield: 
+```{r}
+ggplot(data_model, aes(x = longitude, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+```{r}
+ggplot(data_model, aes(x = latitude, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+No clear pattern based on latitude and longitude. 
+
+
+
+
+For next step, maybe let's try looking at average temperature per site each year pulling from daymet open source database: 
+```{r}
+#to-do for meghan: pull open source data here for temperature based on lat/long and year for the study timeframe
+
+
+```
+```{r}
+#to-do for Meghan: make data table sorted by max yield per site, then 
 ```
 
