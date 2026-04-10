@@ -140,3 +140,131 @@ Once each team submits their predictions on my test set, I will compare their pr
 
 The team that gets the highest **R2** or lowest **RMSE** will receive an award and bragging rights.  
 
+
+```{r Loading the data}
+library(tidyverse)
+
+library(tidyverse)
+
+train <- read_csv("../data/training/training_trait.csv")
+meta  <- read_csv("../data/training/training_meta.csv")
+soil  <- read_csv("../data/training/training_soil.csv")
+
+train <- train %>% rename_with(tolower)
+meta  <- meta  %>% rename_with(tolower)
+soil  <- soil  %>% rename_with(tolower)
+
+data_full <- train %>%
+  left_join(meta, by = c("site", "year")) %>%
+  left_join(soil, by = c("site", "year"))
+
+glimpse(data_full)
+
+```
+```{r Number of missing values}
+colSums(is.na(data_full))
+
+```
+
+```{r Drop all NA missing variables}
+data_model <- data_full %>%
+  select(-soilph, -om_pct, -soilk_ppm, -soilp_ppm)
+
+glimpse(data_model)
+
+```
+
+```{r Drop missing values of date harvested}
+data_model <- data_model %>%
+  filter(!is.na(date_harvested))
+```
+
+```{r Previous crop missing values}
+data_model <- data_model %>%
+  mutate(previous_crop = replace_na(previous_crop, "Unknown"))
+
+```
+
+```{r Year and site as factors}
+data_model <- data_model %>%
+  mutate(
+    year = as.factor(year),
+    site = as.factor(site)
+  )
+```
+
+
+```{r}
+ggplot(data_model, aes(x = yield_mg_ha)) +
+  geom_histogram(bins = 40)
+```
+```{r yield by site}
+ggplot(data_model, aes(x = site, y = yield_mg_ha)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+```{r yield by year}
+ggplot(data_model, aes(x = factor(year), y = yield_mg_ha)) +
+  geom_boxplot()
+```
+Yield varies across years with noticeable fluctuations rather than a consistent trend, indicating strong temporal effects. Higher yields are observed in years like 2019 and 2021–2023, while lower yields occur around 2015–2016 and 2020.
+
+```{r Grain moisture}
+ggplot(data_model, aes(x = grain_moisture, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+
+Grain moisture exhibits a weak positive relationship with yield, as indicated by the slight upward trend. However, the high dispersion of observations suggests that moisture alone is not a strong predictor of yield.
+
+```{r hybrid effect}
+ggplot(data_model, aes(x = hybrid, y = yield_mg_ha)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_blank())
+```
+```{r}
+top_hybrids <- data_model %>%
+  group_by(hybrid) %>%
+  summarise(n = n()) %>%
+  slice_max(n, n = 10) %>%
+  pull(hybrid)
+
+data_model %>%
+  filter(hybrid %in% top_hybrids) %>%
+  ggplot(aes(x = hybrid, y = yield_mg_ha)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45))
+```
+Significant variation in yield is observed across hybrids, indicating that genetic differences play an important role in determining productivity. Some hybrids consistently outperform others, while variability within hybrids suggests differences in stability across environments.
+
+
+```{r Feature Engineering}
+  head(data_model$date_planted)
+```
+```{r}
+library(lubridate)
+
+data_model <- data_model %>%
+  mutate(
+    date_planted = mdy(date_planted),
+    date_harvested = mdy(date_harvested),
+    planting_month = month(date_planted),
+    harvest_month = month(date_harvested)
+  )
+```
+
+```{r}
+glimpse(data_model[, c("date_planted", "date_harvested", "planting_month", "harvest_month")])
+```
+
+```{r}
+data_model <- data_model %>%
+mutate(days_to_harvest = as.numeric(date_harvested - date_planted))
+summary(data_model$days_to_harvest)
+```
+```{r}
+ggplot(data_model, aes(x = days_to_harvest, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+
