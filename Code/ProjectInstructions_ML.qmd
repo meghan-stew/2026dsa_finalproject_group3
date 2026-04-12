@@ -185,12 +185,27 @@ data_model <- data_model %>%
 
 ```
 
+```{r}
+ data_model <- data_model %>%
+  mutate(
+year_dbl = as.double(year))
+
+
+
+```
+
+
+
 ```{r Year and site as factors}
 data_model <- data_model %>%
   mutate(
     year = as.factor(year),
     site = as.factor(site)
+    
   )
+
+
+glimpse(data_model)
 ```
 
 
@@ -269,22 +284,16 @@ ggplot(data_model, aes(x = days_to_harvest, y = yield_mg_ha)) +
   geom_smooth(method = "lm")
 ```
 The above plot does not suggest a clear linear relationship between days to harvest and yield given the variability in the data points. 
-```{r}
+```{r planting month exploration}
 
 ggplot(data_model, aes(x = planting_month, y = yield_mg_ha)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm")
 
 ```
-```{r}
 
-ggplot(data_model, aes(x = harvest_month, y = yield_mg_ha)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(method = "lm")
 
-```
-
-```{r}
+```{r harvest month boxplot}
 ggplot(data_model, aes(x = factor(harvest_month), y = yield_mg_ha)) +
   geom_boxplot()
 ```
@@ -292,28 +301,89 @@ ggplot(data_model, aes(x = factor(harvest_month), y = yield_mg_ha)) +
 While no strong pattern in yield based on plant month or harvest month is observed above, the range for maximum values seems to trend upward as harvest month increases to later, with higher value outliers around months 9 and 10. 
 
 Let's look at how latitude and longitude impact yield: 
-```{r}
+```{r longtitude linear exploration}
 ggplot(data_model, aes(x = longitude, y = yield_mg_ha)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm")
 ```
-```{r}
+```{r latitude linear exploration}
 ggplot(data_model, aes(x = latitude, y = yield_mg_ha)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm")
 ```
 No clear pattern based on latitude and longitude. 
 
-
-
-
-For next step, maybe let's try looking at average temperature per site each year pulling from daymet open source database: 
 ```{r}
-#to-do for meghan: pull open source data here for temperature based on lat/long and year for the study timeframe
+glimpse(data_model)
+```
 
+###Open Source Data Pull
+
+```{r one site-year}
+library(daymetr)
+data_model$year[1]
+
+
+daymet_none <- download_daymet(site = data_model$site[1],
+                              lat = data_model$latitude[1],
+                              lon =  data_model$longitude[1],
+                              start = 2014,
+                              end = 2014,
+                              simplify = T
+                              )
+
+glimpse(daymet_none)
+```
+
+
+
+
+For next step, maybe let's try looking at average temperature per site each year pulling from daymet open source database:
+
+```{r Drop missing values of latitude and longitude}
+data_open <- data_model %>%
+  filter(!is.na(latitude)) %>%
+  filter(!is.na(longitude))
+
+
+colSums(is.na(data_open))
+
+data_open
 
 ```
-```{r}
+```{r pulling Daymet}
+library(daymetr)
+
+daymet_zero <- data_open %>%
+  mutate(weather = pmap(list(.y = year_dbl,
+                             .site = site,
+                             .lat = latitude,
+                             .lon = longitude
+                             ),
+                        function(.y, .site, .lat, .lon)
+                          download_daymet(
+                            site = .site,
+                            lat = .lat,
+                            lon = .lon,
+                            start = .y,
+                            end = .y,
+                            simplify = T,
+                            silent = T
+                          ) %>%
+                          rename(.year = year,
+                                .site = site
+                          )
+
+                        ))
+
+daymet_zero
+
+
 #to-do for Meghan: make data table sorted by max yield per site, then 
+```
+```{r}
+data_model[942, 12
+           ]
+
 ```
 
