@@ -188,7 +188,8 @@ data_model <- data_model %>%
 ```{r}
  data_model <- data_model %>%
   mutate(
-year_dbl = as.double(year))
+year_dbl = as.double(year)) %>%
+  mutate(site_chr = as.character(site)) #added this in case the ML component needs it in character format
 
 
 
@@ -286,9 +287,8 @@ ggplot(data_model, aes(x = days_to_harvest, y = yield_mg_ha)) +
 The above plot does not suggest a clear linear relationship between days to harvest and yield given the variability in the data points. 
 ```{r planting month exploration}
 
-ggplot(data_model, aes(x = planting_month, y = yield_mg_ha)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(method = "lm")
+ggplot(data_model, aes(x = factor(planting_month), y = yield_mg_ha)) +
+ geom_boxplot()
 
 ```
 
@@ -298,7 +298,7 @@ ggplot(data_model, aes(x = factor(harvest_month), y = yield_mg_ha)) +
   geom_boxplot()
 ```
 
-While no strong pattern in yield based on plant month or harvest month is observed above, the range for maximum values seems to trend upward as harvest month increases to later, with higher value outliers around months 9 and 10. 
+While no strong pattern in yield based on plant month or harvest month is observed above, the range for maximum values seems to trend upward as harvest month increases to later, with higher value averages around months 11 and 10. 
 
 Let's look at how latitude and longitude impact yield: 
 ```{r longtitude linear exploration}
@@ -338,7 +338,6 @@ glimpse(daymet_none)
 
 
 
-For next step, maybe let's try looking at average temperature per site each year pulling from daymet open source database:
 
 ```{r Drop missing values of latitude and longitude}
 #| message: false
@@ -353,6 +352,11 @@ colSums(is.na(data_model2))
 
 
 ```
+
+
+
+For next step, maybe let's try looking at average temperature per site each year pulling from daymet open source database:
+
 ```{r pulling Daymet}
 #| message: false
 #| warning: false
@@ -405,10 +409,32 @@ library(doParallel)
 
 *Preprocessing*
 
+Let’s remove unneeded columns replicate, block,  year in factor form, and days_to_harvest since less information was gleaned from harvest length than harvest month and planting month:
+
+and remove site to as a factor
+
+```{r XG Boost column cleaning}
+
+corn_data <- data_model2 %>%
+  select(-replicate, -block, -year, -days_to_harvest, -site, -date_planted, -date_harvested)
+
+glimpse(corn_data)
+
+```
+```{r renaming month columns}
+corn_data2 <- corn_data %>%
+  mutate(harvest_month = month(harvest_month, label = T)) %>%
+  mutate(planting_month = month(planting_month, label = T))
+  
+  corn_data2
+```
+
+
+
 ```{r corn_split}
 set.seed(931735) # Setting seed to get reproducible results 
 corn_split <- initial_split(
-  data_model2, 
+  corn_data2, 
   prop = .7, 
   strata = yield_mg_ha  # Stratify by target variable
   )
