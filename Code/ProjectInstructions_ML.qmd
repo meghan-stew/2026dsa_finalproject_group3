@@ -659,6 +659,20 @@ xgb_grid <- grid_latin_hypercube(
 xgb_grid
 ```
 
+```{r}
+registerDoParallel(cores = parallel::detectCores() - 1)
 
+set.seed(76544)
+
+xgb_res <- tune_race_anova(
+  object = xgb_spec,
+  preprocessor = corn_recipe,
+  resamples = resampling_foldcv,
+  grid = xgb_grid,
+  control = control_race(save_pred = TRUE)
+)
+
+stopImplicitCluster()
 ```
+
 
