@@ -166,7 +166,7 @@ colSums(is.na(data_full))
 
 ```
 
-```{r Drop all NA missing variables}
+```{r Drop critical NA missing variables}
 data_model <- data_full %>%
   select(-soilph, -om_pct, -soilk_ppm, -soilp_ppm)
 
@@ -266,5 +266,218 @@ summary(data_model$days_to_harvest)
 ggplot(data_model, aes(x = days_to_harvest, y = yield_mg_ha)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm")
+```
+
+```{r open source additional data}
+library(tidyverse)
+library(lubridate)
+library(daymetr)
+
+site_years <- data_model %>%
+  distinct(site, year, latitude, longitude) %>%
+  filter(!is.na(latitude), !is.na(longitude)) %>%
+  mutate(year = as.integer(as.character(year)))
+
+get_daymet_data <- function(site, year, latitude, longitude) {
+  d <- download_daymet(
+    site = as.character(site),
+    lat = latitude,
+    lon = longitude,
+    start = year,
+    end = year,
+    internal = TRUE,
+    silent = TRUE
+  )
+  
+  df <- d$data
+  
+  tibble(
+    site = site,
+    year = year,
+    yday = df$yday,
+    prcp = df$prcp..mm.day.,
+    tmax = df$tmax..deg.c.,
+    tmin = df$tmin..deg.c.,
+    srad = df$srad..W.m.2.,
+    vp = df$vp..Pa.,
+    dayl = df$dayl..s.
+  )
+}
+
+weather_daily <- purrr::pmap_dfr(
+  site_years,
+  function(site, year, latitude, longitude) {
+    tryCatch(
+      get_daymet_data(site, year, latitude, longitude),
+      error = function(e) NULL
+    )
+  }
+)
+
+weather_features <- weather_daily %>%
+  mutate(
+    date = as.Date(yday - 1, origin = paste0(year, "-01-01")) + 1,
+    month = month(date),
+    tmean = (tmax + tmin) / 2,
+    gdd10 = pmax(tmean - 10, 0)
+  ) %>%
+  group_by(site, year) %>%
+  summarise(
+    total_prcp = sum(prcp, na.rm = TRUE),
+    prcp_apr_sep = sum(prcp[month %in% 4:9], na.rm = TRUE),
+    prcp_may_jul = sum(prcp[month %in% 5:7], na.rm = TRUE),
+    prcp_aug = sum(prcp[month == 8], na.rm = TRUE),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_tmin = mean(tmin, na.rm = TRUE),
+    mean_tmean = mean(tmean, na.rm = TRUE),
+    tmean_apr_sep = mean(tmean[month %in% 4:9], na.rm = TRUE),
+    tmax_jul = mean(tmax[month == 7], na.rm = TRUE),
+    total_gdd10 = sum(gdd10, na.rm = TRUE),
+    gdd10_apr_sep = sum(gdd10[month %in% 4:9], na.rm = TRUE),
+    mean_srad = mean(srad, na.rm = TRUE),
+    mean_vp = mean(vp, na.rm = TRUE),
+    mean_dayl = mean(dayl, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+data_model_weather <- data_model %>%
+  mutate(year = as.integer(as.character(year))) %>%
+  left_join(weather_features, by = c("site", "year"))
+```
+```{r}
+glimpse(weather_daily)
+glimpse(weather_features)
+glimpse(data_model_weather)
+```
+```{r}
+data_model_weather %>%
+  group_by(site, year) %>%
+  summarise(n_weather = n_distinct(total_prcp)) %>%
+  summary()
+```
+
+We used the latitude and longitude of each site-year to retrieve daily weather data from the Daymet database. The weather variables included precipitation, temperature, solar radiation, vapor pressure, and day length. These daily observations were aggregated into site-year level features such as total precipitation, average temperature, and growing degree days (GDD), along with seasonal indicators. The resulting weather features were then merged back into the main dataset by site and year, ensuring consistent environmental conditions across all observations within each site-year.
+
+```{r}
+names(data_model_weather)
+```
+
+```{r}
+final_data <- data_model_weather %>%
+  select(
+    yield_mg_ha,
+    
+    hybrid, site, year, previous_crop,
+    grain_moisture,
+    
+    planting_month, harvest_month, days_to_harvest,
+    
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  )
+```
+
+
+```{r}
+final_data <- final_data %>%
+  mutate(
+    hybrid = as.factor(hybrid),
+    site = as.factor(site),
+    year = as.factor(year),
+    previous_crop = as.factor(previous_crop)
+  )
+```
+
+```{r}
+final_data <- final_data %>%
+  drop_na()
+glimpse(final_data)
+summary(final_data$yield_mg_ha)
+```
+```{r XGBoost modeling}
+#| message: false
+#| warning: false
+
+library(tidymodels)
+library(finetune)
+library(vip)
+library(xgboost)
+library(tidyverse)
+library(doParallel)
+```
+
+```{r Data split}
+set.seed(931735)
+
+corn_split <- initial_split(
+  final_data,
+  prop = 0.7,
+  strata = yield_mg_ha
+)
+
+corn_train <- training(corn_split)
+corn_test  <- testing(corn_split)
+```
+
+```{r Target distribution}
+ggplot() +
+  geom_density(data = corn_train, aes(x = yield_mg_ha), color = "red") +
+  geom_density(data = corn_test, aes(x = yield_mg_ha), color = "blue")
+
+```
+```{r coorn recipe}
+corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
+  step_rm(mean_dayl, hybrid) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+corn_prep <- corn_recipe %>%
+  prep()
+
+corn_prep
+```
+```{r Model specification}
+xgb_spec <- boost_tree(
+  trees = tune(),
+  tree_depth = tune(),
+  min_n = tune(),
+  learn_rate = tune()
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+xgb_spec
+```
+
+```{r Cross validation setup}
+set.seed(235)
+
+resampling_foldcv <- vfold_cv(
+  corn_train,
+  v = 10,
+  strata = yield_mg_ha
+)
+
+resampling_foldcv
+
+```
+```{r Grid of hyperparameter}
+set.seed(432)
+
+xgb_grid <- grid_latin_hypercube(
+  trees(range = c(300L, 1200L)),
+  tree_depth(range = c(2L, 10L)),
+  min_n(range = c(2L, 40L)),
+  learn_rate(range = c(-3, -0.5)),
+  size = 20
+)
+
+xgb_grid
+```
+
+
 ```
 
