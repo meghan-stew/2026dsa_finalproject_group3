@@ -891,6 +891,41 @@ ggsave(plot = vip,
 
 
 ```
+#Decision Tree 
+
+
+```{r decision tree load-in}
+#Decision Tree Model Specification:
+
+library(rpart)
+
+tree_model <- rpart(yield_mg_ha ~ .,
+data = corn_train, 
+method = "regression",
+minsplit = 2,
+minbucket = 1,
+cp = -1 )
+```
+
+
+```{r variable importance: }
+
+#variable importance view for decision tree:
+
+tree_model$variable importance
+
+#viewing cross-validation results: 
+printcp(tree_model)
+
+```
+
+
+
+
+
+
+
+
 
 
 
