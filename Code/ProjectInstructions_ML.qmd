@@ -690,6 +690,31 @@ bestcorn_rmse %>%
             corn_r2_one_std_error)
 ```
 
+#XG Boost Final Spec
+```{r final corn}
+final_corn <- boost_tree(
+  trees = corn_rmse_pct_loss$trees,           
+  tree_depth = corn_rmse_pct_loss$tree_depth, 
+  min_n = corn_rmse_pct_loss$min_n,           
+  learn_rate = corn_rmse_pct_loss$learn_rate
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+final_corn
+```
+
+#XG Boost Final Fit
+
+```{r final_fit}
+set.seed(12)
+corny_fit <- last_fit(final_corn, corn_recipe, split = corn_split)
+
+
+corny_fit %>%
+  collect_predictions()
+```
+
 
 
 ```{r}
