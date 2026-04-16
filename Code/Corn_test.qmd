@@ -7,7 +7,7 @@ format: html
 author: Bishal Gaire and Meghan Stewart 
 ---
 
-
+#Loading Data + Libraries
 ```{r Loading the data}
 library(tidyverse)
 
@@ -29,7 +29,7 @@ test <- test %>% rename_with(tolower)
 meta  <- meta  %>% rename_with(tolower)
 soil  <- soil  %>% rename_with(tolower)
 
-data_full <- train %>%
+data_full <- test %>%
   left_join(meta, by = c("site", "year")) %>%
   left_join(soil, by = c("site", "year"))
 
@@ -44,13 +44,13 @@ meta %>%
            )
 summary(data_full)
 
-(unique(test$site) == unique(test$site))
+(unique(test$yield_mg_ha) == unique(test$yield_mg_ha))
 
 setdiff(meta$site, test$site)
 
 ```
 
-
+#Dropping NA Values 
 
 ```{r Drop critical NA missing variables}
 data_model <- data_full %>%
@@ -61,10 +61,7 @@ glimpse(data_model)
 
 ```
 
-```{r Drop missing values of date harvested}
-data_model <- data_model %>%
-  filter(!is.na(date_harvested))
-```
+
 
 
 ```{r Previous crop missing values}
@@ -87,11 +84,7 @@ glimpse(data_model)
 ```
 
 
-```{r Plotting }
-ggplot(data_model, aes(x = yield_mg_ha)) +
-  geom_histogram(bins = 40)
-```
-
+#Daymet Data Pull
 
 ```{r Daymet weather data}
 # Step C: Download daily weather data from Daymet
@@ -152,7 +145,7 @@ write.csv(weather_daily, "../Data/weather_daily_test.csv", row.names = F)
 
 ```
 
-
+##Daymet New Variables
 
 
 ```{r New Variables}
@@ -196,3 +189,47 @@ glimpse(weather_daily)
 glimpse(data_model_weather)
 summary(data_model_weather)
 ```
+
+```{r checking open data}
+final_test <- data_model_weather
+
+colSums(is.na(final_test))
+
+```
+
+```{r Final data formation}
+final_test <- data_model_weather %>%
+  select(
+    yield_mg_ha,
+    
+    hybrid, site, year, previous_crop,
+    
+    
+    
+    
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  )
+
+```
+
+#XGBoost Prediction
+```{r}
+
+final_corn_trainer <- readRDS("~/Crop_Soil_Stats/2026dsa_finalproject_group3/Data/final_corn_trainer.rds")
+
+
+```
+
+
+```{r}
+test_pred <- predict(final_corn_trainer, new_data = final_test)
+
+head(test_pred)
+
+```
+
+
+

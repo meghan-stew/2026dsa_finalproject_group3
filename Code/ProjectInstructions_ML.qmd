@@ -494,6 +494,7 @@ write.csv(final_data, "../Data/final_data.csv")
 ```
 
 #XGBoost Pre-processing
+
 ```{r corn_split}
 library(tidymodels)
 library(finetune)
@@ -545,7 +546,7 @@ cat("\\nCreate recipe for data preprocessing\\n")
 
 
 corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
-  step_rm(mean_dayl, hybrid) %>%
+  step_rm(grain_moisture,harvest_month, planting_month, days_to_harvest) %>%
   step_novel(all_nominal_predictors()) %>%
   step_unknown(all_nominal_predictors()) %>%
   step_dummy(all_nominal_predictors())
@@ -619,6 +620,7 @@ xgb_grid
 
 
 ```{r ANOVA racing}
+#| warning: false
 registerDoParallel(cores = parallel::detectCores() - 1)
 
 set.seed(76544)
@@ -743,6 +745,24 @@ final_corn <- boost_tree(
 
 final_corn
 ```
+```{r saving XGBoost workflow operation} 
+#googled this step since we didn't talk about it in class from tidypredict and tidymodels.com. 
+
+
+final_corn_op <- workflow() %>%
+  add_model (final_corn) %>%
+  add_recipe(corn_recipe)
+
+final_corn_trainer <- final_corn_op %>%
+  fit(data = corn_train)
+
+#saveRDS will be used to save the model from tidymodels
+saveRDS(final_corn_trainer, file = "../Data/final_corn_trainer.rds")
+
+
+```
+
+
 
 #XG Boost Final Fit
 
