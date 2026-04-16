@@ -353,6 +353,10 @@ get_daymet_data <- function(site, year, latitude, longitude) {
 }
 
 # Loop through all site-years and combine results
+use_csv = T
+if (use_csv) {
+  weather_daily <- read.csv("../Data/weather_daily.csv")
+} else {
 weather_daily <- purrr::pmap_dfr(
   site_years,
   function(site, year, latitude, longitude) {
@@ -362,8 +366,11 @@ weather_daily <- purrr::pmap_dfr(
     )
   }
 )
+write.csv(weather_daily, "../Data/weather_daily.csv", row.names = F)}
 
 ```
+
+
 ```{r New Variables}
 weather_features <- weather_daily %>%
   mutate(
@@ -396,11 +403,7 @@ data_model_weather <- data_model %>%
   left_join(weather_features, by = c("site", "year"))
 ```
 
-```{r saving open data into csv}
 
-write.csv()
-
-```
 
 
 ```{r Glimpse of weather_daily}
@@ -411,7 +414,7 @@ glimpse(data_model_weather)
 ```
 We used the latitude and longitude of each site-year to retrieve daily weather data from the Daymet database. The weather variables included precipitation, temperature, solar radiation, vapor pressure, and day length. These daily observations were aggregated into site-year level features such as total precipitation, average temperature, and growing degree days (GDD), along with seasonal indicators. The resulting weather features were then merged back into the main dataset by site and year, ensuring consistent environmental conditions across all observations within each site-year.
 
-```{r}
+```{r checking open data}
 names(data_model_weather)
 ```
 ```{r Final data formation}
@@ -448,7 +451,7 @@ glimpse(final_data)
 ```{r}
 summary(final_data$yield_mg_ha)
 
-write.csv(final_data, "../Data/final_data.csv")
+#write.csv(final_data, "../Data/final_data.csv")
 
 
 
@@ -476,13 +479,34 @@ corn_split <- initial_split(
 corn_train <- training(corn_split)
 corn_test  <- testing(corn_split)
 
-ggplot() +
+density_plot <- ggplot() +
   geom_density(data = corn_train, aes(x = yield_mg_ha), color = "red") +
   geom_density(data = corn_test, aes(x = yield_mg_ha), color = "blue")
+
+library(here)
+
+#message for console if needed
+cat(paste0("Saving... density plot pngs: corn train and test train"))
+
+ggsave(plot = density_plot,
+       path = here("Output"),
+       filename = "density_plot_test_train.png",
+       height = 6,
+       width = 9,
+       dpi = 600)
+       
+       
+       
+       
+
+
 ```
 ##XG Boost Recipe
 ```{r preprocessing-recipe}
 # Data Preprocessing (Recipe)
+
+cat("\\nCreate recipe for data preprocessing\\n")
+
 
 corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
   step_rm(mean_dayl, hybrid) %>%
@@ -572,6 +596,98 @@ xgb_res <- tune_race_anova(
 )
 
 stopImplicitCluster()
+```
+
+```{r ANOVA race results}
+png("../Output/corn_race.png", width = 800, height = 600)
+
+plot_race(xgb_res)
+xgb_res$.metrics[[2]]
+dev.off()
+cat("blubby says wuppa")
+
+
+
+```
+```{r finding RMSE}
+
+bestcorn_rmse <- xgb_res %>%
+      select_best(metric = "rmse")%>%
+  mutate(source = "bestcorn_rmse")
+
+bestcorn_rmse
+```
+```{r RMSE within 1% loss }
+
+
+corn_rmse_pct_loss <- xgb_res %>% 
+  select_by_pct_loss("min_n",
+                     metric = "rmse",
+                     limit = 1
+                     )%>% 
+  mutate(source = "corn_rmse_pct_loss")
+
+corn_rmse_pct_loss
+
+
+
+```
+
+```{r}
+corn_rmse_one_std_err <- xgb_res %>% 
+  select_by_one_std_err(metric = "rmse",
+                        eval_time = 100,
+                        trees
+                        )%>% 
+  mutate(source = "corn_rmse_one_std_err")
+
+corn_rmse_one_std_err
+```
+
+
+```{r R2 for best model}
+corn_r2 <- xgb_res %>% 
+  select_best(metric = "rsq")%>% 
+  mutate(source = "corn_r2")
+
+corn_r2
+
+
+```
+
+```{r r^2 with 1% loss}
+
+corn_r2_pct_loss <- xgb_res %>% 
+  select_by_pct_loss("min_n",
+                     metric = "rsq",
+                     limit = 1
+                     ) %>% 
+  mutate(source = "corn_r2_pct_loss")
+
+corn_r2_pct_loss
+
+```
+
+
+
+```{r}
+corn_r2_one_std_error <- xgb_res %>% 
+  select_by_one_std_err(metric = "rsq",
+                        eval_time = 100,
+                        trees
+                        ) %>%
+  mutate(source = "corn_r2_one_std_error")
+
+corn_r2_one_std_error
+```
+```{r compare metrics}
+
+bestcorn_rmse %>% 
+  bind_rows(corn_rmse_pct_loss, 
+            corn_rmse_one_std_err, 
+            corn_r2, 
+            corn_r2_pct_loss, 
+            corn_r2_one_std_error)
 ```
 
 
