@@ -396,6 +396,12 @@ data_model_weather <- data_model %>%
   left_join(weather_features, by = c("site", "year"))
 ```
 
+```{r saving open data into csv}
+
+write.csv()
+
+```
+
 
 ```{r Glimpse of weather_daily}
 glimpse(weather_daily)
@@ -441,8 +447,14 @@ glimpse(final_data)
 ```
 ```{r}
 summary(final_data$yield_mg_ha)
+
+write.csv(final_data, "../Data/final_data.csv")
+
+
+
 ```
 
+#XGBoost Pre-processing
 ```{r corn_split}
 library(tidymodels)
 library(finetune)
@@ -468,7 +480,7 @@ ggplot() +
   geom_density(data = corn_train, aes(x = yield_mg_ha), color = "red") +
   geom_density(data = corn_test, aes(x = yield_mg_ha), color = "blue")
 ```
-
+##XG Boost Recipe
 ```{r preprocessing-recipe}
 # Data Preprocessing (Recipe)
 
@@ -484,6 +496,7 @@ corn_prep <- corn_recipe %>%
 corn_prep
 ```
 ```{r xgboost-specification}
+
 # XGBoost Model Specification
 
 xgb_spec <- boost_tree(
@@ -510,7 +523,7 @@ resampling_foldcv <- vfold_cv(
 
 resampling_foldcv
 ```
-
+##Hyperparameter Grid
 ```{r hyperparameter-grid}
 # Hyperparameter Grid for XGBoost
 
@@ -542,8 +555,10 @@ xgb_grid <- grid_latin_hypercube(
 xgb_grid
 ```
 
+##Parallel Processing and ANOVA Racing
 
-```{r}
+
+```{r ANOVA racing}
 registerDoParallel(cores = parallel::detectCores() - 1)
 
 set.seed(76544)
@@ -558,6 +573,8 @@ xgb_res <- tune_race_anova(
 
 stopImplicitCluster()
 ```
+
+
 
 ```{r}
 knitr::purl("ProjectInstructions_ML.qmd", output = "sapelo_script.R", documentation = 0)
