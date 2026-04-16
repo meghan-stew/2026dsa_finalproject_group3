@@ -13,9 +13,17 @@ library(tidyverse)
 
 library(tidyverse)
 
-test <- read_csv("../data/testing/testing_submission.csv")
-meta  <- read_csv("../data/testing/testing_meta.csv")
-soil  <- read_csv("../data/testing/testing_soil.csv")
+test <- read_csv("../Data/testing/testing_submission.csv") %>% 
+  mutate(site = substr(site, 1,4))
+meta  <- read_csv("../Data/testing/testing_meta.csv") %>% 
+  mutate(site = substr(site, 1,4))
+soil  <- read_csv("../Data/testing/testing_soil.csv") %>% 
+  separate(site, into = c("site", "year"), sep = "_") %>% 
+  mutate(year = as.numeric(year))
+
+
+test <- test %>% 
+  filter(site %in% meta$site)
 
 test <- test %>% rename_with(tolower)
 meta  <- meta  %>% rename_with(tolower)
@@ -27,6 +35,18 @@ data_full <- train %>%
 
 glimpse(data_full)
 
+
+test %>% 
+  distinct(site)
+
+meta %>% 
+  distinct(site
+           )
+summary(data_full)
+
+(unique(test$site) == unique(test$site))
+
+setdiff(meta$site, test$site)
 
 ```
 
@@ -72,20 +92,67 @@ ggplot(data_model, aes(x = yield_mg_ha)) +
   geom_histogram(bins = 40)
 ```
 
-```{r}
+
+```{r Daymet weather data}
+# Step C: Download daily weather data from Daymet
+
 library(tidyverse)
 library(lubridate)
-
+library(daymetr)
 
 # Create unique site-year combinations with coordinates
-site_years <- data_model %>%
+site_years <- meta %>%
   distinct(site, year, latitude, longitude) %>%
   filter(!is.na(latitude), !is.na(longitude)) %>%
   mutate(year = as.integer(as.character(year)))
+
+# Function to download weather for one site-year
+get_daymet_data <- function(site, year, latitude, longitude) {
+  d <- download_daymet(
+    site = as.character(site),
+    lat = latitude,
+    lon = longitude,
+    start = year,
+    end = year,
+    internal = TRUE,
+    silent = TRUE
+  )
   
+  df <- d$data
   
-  weather_daily <- read.csv("../Data/weather_daily.csv")
+  tibble(
+    site = site,
+    year = year,
+    yday = df$yday,
+    prcp = df$prcp..mm.day.,
+    tmax = df$tmax..deg.c.,
+    tmin = df$tmin..deg.c.,
+    srad = df$srad..W.m.2.,
+    vp = df$vp..Pa.,
+    dayl = df$dayl..s.
+  )
+}
+
+# Loop through all site-years and combine results
+#use_csv = T
+#if (use_csv) {
+ # weather_daily <- read.csv("../Data/weather_daily.csv")
+#} else {
+weather_daily <- purrr::pmap_dfr(
+  site_years,
+  function(site, year, latitude, longitude) {
+    tryCatch(
+      get_daymet_data(site, year, latitude, longitude),
+      error = function(e) NULL
+    )
+  }
+)
+write.csv(weather_daily, "../Data/weather_daily_test.csv", row.names = F)
+#}
+
 ```
+
+
 
 
 ```{r New Variables}
@@ -118,5 +185,14 @@ weather_features <- weather_daily %>%
 data_model_weather <- data_model %>%
   mutate(year = as.integer(as.character(year))) %>%
   left_join(weather_features, by = c("site", "year"))
-  ```
 
+summary(data_model)
+
+```
+```{r Glimpse of weather_daily}
+glimpse(weather_daily)
+```
+```{r summary of data_model_weather}
+glimpse(data_model_weather)
+summary(data_model_weather)
+```
