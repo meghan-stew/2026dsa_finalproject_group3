@@ -146,9 +146,17 @@ library(tidyverse)
 
 library(tidyverse)
 
-train <- read_csv("../data/training/training_trait.csv")
-meta  <- read_csv("../data/training/training_meta.csv")
-soil  <- read_csv("../data/training/training_soil.csv")
+train <- read_csv("../data/training/training_trait.csv") %>% 
+  mutate(site = substr(site, 1,4))
+meta  <- read_csv("../data/training/training_meta.csv") %>% 
+  mutate(site = substr(site, 1,4))
+soil  <- read_csv("../data/training/training_soil.csv") %>% 
+  separate(site, into = c("site", "year"), sep = "_") %>% 
+  mutate(year = as.numeric(year))
+
+
+train <- train %>% 
+  filter(site %in% meta$site)
 
 train <- train %>% rename_with(tolower)
 meta  <- meta  %>% rename_with(tolower)
@@ -159,6 +167,19 @@ data_full <- train %>%
   left_join(soil, by = c("site", "year"))
 
 glimpse(data_full)
+
+
+train_c %>% 
+  distinct(site)
+
+meta %>% 
+  distinct(site
+           )
+summary(data_full)
+
+(unique(train$site) == unique(meta$site))
+
+setdiff(meta$site, train$site)
 
 ```
 
@@ -312,6 +333,7 @@ ggplot(data_model, aes(x = factor(harvest_month), y = yield_mg_ha)) +
 
 While no strong pattern in yield based on plant month or harvest month is observed above, the range for maximum values seems to trend upward as harvest month increases to later, with higher value averages around months 11 and 10. 
 
+#Daymet Pull
 ```{r Daymet weather data}
 # Step C: Download daily weather data from Daymet
 
@@ -320,7 +342,7 @@ library(lubridate)
 library(daymetr)
 
 # Create unique site-year combinations with coordinates
-site_years <- data_model %>%
+site_years <- meta %>%
   distinct(site, year, latitude, longitude) %>%
   filter(!is.na(latitude), !is.na(longitude)) %>%
   mutate(year = as.integer(as.character(year)))
@@ -353,10 +375,10 @@ get_daymet_data <- function(site, year, latitude, longitude) {
 }
 
 # Loop through all site-years and combine results
-use_csv = T
-if (use_csv) {
-  weather_daily <- read.csv("../Data/weather_daily.csv")
-} else {
+#use_csv = T
+#if (use_csv) {
+ # weather_daily <- read.csv("../Data/weather_daily.csv")
+#} else {
 weather_daily <- purrr::pmap_dfr(
   site_years,
   function(site, year, latitude, longitude) {
@@ -366,7 +388,8 @@ weather_daily <- purrr::pmap_dfr(
     )
   }
 )
-write.csv(weather_daily, "../Data/weather_daily.csv", row.names = F)}
+write.csv(weather_daily, "../Data/weather_daily.csv", row.names = F)
+#}
 
 ```
 
@@ -401,6 +424,10 @@ weather_features <- weather_daily %>%
 data_model_weather <- data_model %>%
   mutate(year = as.integer(as.character(year))) %>%
   left_join(weather_features, by = c("site", "year"))
+
+summary(data_model)
+
+
 ```
 
 
@@ -411,6 +438,7 @@ glimpse(weather_daily)
 ```
 ```{r summary of data_model_weather}
 glimpse(data_model_weather)
+summary(data_model_weather)
 ```
 We used the latitude and longitude of each site-year to retrieve daily weather data from the Daymet database. The weather variables included precipitation, temperature, solar radiation, vapor pressure, and day length. These daily observations were aggregated into site-year level features such as total precipitation, average temperature, and growing degree days (GDD), along with seasonal indicators. The resulting weather features were then merged back into the main dataset by site and year, ensuring consistent environmental conditions across all observations within each site-year.
 
@@ -459,7 +487,7 @@ glimpse(final_data)
 ```{r}
 summary(final_data$yield_mg_ha)
 
-#write.csv(final_data, "../Data/final_data.csv")
+write.csv(final_data, "../Data/final_data.csv")
 
 
 
@@ -617,6 +645,8 @@ cat("blubby says wuppa")
 
 
 ```
+
+
 ```{r finding RMSE}
 
 bestcorn_rmse <- xgb_res %>%
@@ -625,6 +655,8 @@ bestcorn_rmse <- xgb_res %>%
 
 bestcorn_rmse
 ```
+
+
 ```{r RMSE within 1% loss }
 
 
@@ -678,7 +710,7 @@ corn_r2_pct_loss
 
 
 
-```{r}
+```{r r2 one std error}
 corn_r2_one_std_error <- xgb_res %>% 
   select_by_one_std_err(metric = "rsq",
                         eval_time = 100,
@@ -817,11 +849,13 @@ vip <- final_corn %>%
     Variable = fct_reorder(Variable,
                            Importance)
   ) %>%
+  dplyr::filter(Importance != 0) %>%
   ggplot(aes(x = Importance,
              y = Variable,
              fill = Importance)) +
   geom_col() +
-  scale_x_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0)) + 
+  
   labs(y = NULL)+
   theme(panel.background  = element_rect(fill = "gray82"),
         panel.grid = element_blank())
@@ -831,8 +865,8 @@ cat(paste0("\\nSaving...... publication ready plot for variable importance\\n"))
 ggsave(plot = vip,
        path = here("output"),
        filename = "vip_test_corn.png",
-       height = 6,
-       width = 9,
+       height = 9,
+       width = 15,
        dpi = 600)
 
 

@@ -1,0 +1,122 @@
+---
+title: "Corn_test"
+format: html
+    embed-resources: true
+    toc: true
+    theme: cerulean
+author: Bishal Gaire and Meghan Stewart 
+---
+
+
+```{r Loading the data}
+library(tidyverse)
+
+library(tidyverse)
+
+test <- read_csv("../data/testing/testing_submission.csv")
+meta  <- read_csv("../data/testing/testing_meta.csv")
+soil  <- read_csv("../data/testing/testing_soil.csv")
+
+test <- test %>% rename_with(tolower)
+meta  <- meta  %>% rename_with(tolower)
+soil  <- soil  %>% rename_with(tolower)
+
+data_full <- train %>%
+  left_join(meta, by = c("site", "year")) %>%
+  left_join(soil, by = c("site", "year"))
+
+glimpse(data_full)
+
+
+```
+
+
+
+```{r Drop critical NA missing variables}
+data_model <- data_full %>%
+  select(-soilph, -om_pct, -soilk_ppm, -soilp_ppm)
+
+glimpse(data_model)
+
+
+```
+
+```{r Drop missing values of date harvested}
+data_model <- data_model %>%
+  filter(!is.na(date_harvested))
+```
+
+
+```{r Previous crop missing values}
+data_model <- data_model %>%
+  mutate(previous_crop = replace_na(previous_crop, "Unknown"))
+
+```
+
+
+```{r Year and site as factors}
+data_model <- data_model %>%
+  mutate(
+    year = as.factor(year),
+    site = as.factor(site)
+    
+  )
+
+
+glimpse(data_model)
+```
+
+
+```{r Plotting }
+ggplot(data_model, aes(x = yield_mg_ha)) +
+  geom_histogram(bins = 40)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+
+# Create unique site-year combinations with coordinates
+site_years <- data_model %>%
+  distinct(site, year, latitude, longitude) %>%
+  filter(!is.na(latitude), !is.na(longitude)) %>%
+  mutate(year = as.integer(as.character(year)))
+  
+  
+  weather_daily <- read.csv("../Data/weather_daily.csv")
+```
+
+
+```{r New Variables}
+weather_features <- weather_daily %>%
+  mutate(
+    date = as.Date(yday - 1, origin = paste0(year, "-01-01")) + 1,
+    month = month(date),
+    tmean = (tmax + tmin) / 2,
+    gdd10 = pmax(tmean - 10, 0)
+  ) %>%
+  group_by(site, year) %>%
+  summarise(
+    total_prcp = sum(prcp, na.rm = TRUE),
+    prcp_apr_sep = sum(prcp[month %in% 4:9], na.rm = TRUE),
+    prcp_may_jul = sum(prcp[month %in% 5:7], na.rm = TRUE),
+    prcp_aug = sum(prcp[month == 8], na.rm = TRUE),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_tmin = mean(tmin, na.rm = TRUE),
+    mean_tmean = mean(tmean, na.rm = TRUE),
+    tmean_apr_sep = mean(tmean[month %in% 4:9], na.rm = TRUE),
+    tmax_jul = mean(tmax[month == 7], na.rm = TRUE),
+    total_gdd10 = sum(gdd10, na.rm = TRUE),
+    gdd10_apr_sep = sum(gdd10[month %in% 4:9], na.rm = TRUE),
+    mean_srad = mean(srad, na.rm = TRUE),
+    mean_vp = mean(vp, na.rm = TRUE),
+    mean_dayl = mean(dayl, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+data_model_weather <- data_model %>%
+  mutate(year = as.integer(as.character(year))) %>%
+  left_join(weather_features, by = c("site", "year"))
+  ```
+
