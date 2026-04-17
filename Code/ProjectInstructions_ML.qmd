@@ -459,9 +459,7 @@ final_data <- data_model_weather %>%
     yield_mg_ha,
     
     hybrid, site, year, previous_crop,
-    grain_moisture,
     
-    planting_month, harvest_month, days_to_harvest,
     
     total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
     mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
@@ -548,7 +546,7 @@ cat("\\nCreate recipe for data preprocessing\\n")
 
 
 corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
-  step_rm(grain_moisture,harvest_month, planting_month, days_to_harvest) %>%
+  
   step_novel(all_nominal_predictors()) %>%
   step_unknown(all_nominal_predictors()) %>%
   step_dummy(all_nominal_predictors()) %>%
@@ -569,7 +567,7 @@ xgb_spec <- boost_tree(
   min_n = tune(),
   learn_rate = tune()
 ) %>%
-  set_engine("xgboost") %>%
+  set_engine("xgboost", nthread = 1) %>%
   set_mode("regression")
 
 xgb_spec
