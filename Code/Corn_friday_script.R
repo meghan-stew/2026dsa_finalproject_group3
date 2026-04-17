@@ -1,25 +1,25 @@
 ---
-title: "Data Science Applied to Ag - Final Project - ML"
+  title: "Data Science Applied to Ag - Final Project - ML-RSCRIPT"
 format:
   html:
-    embed-resources: true
-    toc: true
-    theme: cerulean
+  embed-resources: true
+toc: true
+theme: cerulean
 author: Bishal Gaire and Meghan Stewart 
 ---
-
-# A. Introduction  
-This file contains the **instructions** for the final project.  
+  
+  # A. Introduction  
+  This file contains the **instructions** for the final project.  
 
 To get you setup, you will need to:  
-
+  
   - Student #1: create a repository on your GitHub account. You can call this repository "2026dsa_finalproject_groupX", **where X is the number of your group**. Make it public, add a README, add a .gitignore for R.  
-  - Student #1: follow the steps we did in class to start a new RStudio project with version control.  
-  - Student #1: in your computer, create the sub-folders code, data, output, and move your data set into the `data` folder. Also, student 1 moves this current script into the `code` folder. Do a git stage, commit, push.  
-  - Student #1: on GitHub, go the repository settings and invite your partner to be a collaborator in the repository. That will give them push permission.  
-  - Now, both students should clone this repository on their computers like we did in class. Make sure this step works well and that you can pull and push from GitHub.  
-  - Student 2, after cloning, does a git pull to get all these updates on their computer.  
-  - Student 1 and 2 work together to update the README file. README files should explain what the repository is about, the goals of that project, who is working in it, and any other important details you may find.  
+- Student #1: follow the steps we did in class to start a new RStudio project with version control.  
+- Student #1: in your computer, create the sub-folders code, data, output, and move your data set into the `data` folder. Also, student 1 moves this current script into the `code` folder. Do a git stage, commit, push.  
+- Student #1: on GitHub, go the repository settings and invite your partner to be a collaborator in the repository. That will give them push permission.  
+- Now, both students should clone this repository on their computers like we did in class. Make sure this step works well and that you can pull and push from GitHub.  
+- Student 2, after cloning, does a git pull to get all these updates on their computer.  
+- Student 1 and 2 work together to update the README file. README files should explain what the repository is about, the goals of that project, who is working in it, and any other important details you may find.  
 
 # B. Defining the problem  
 
@@ -27,15 +27,15 @@ You are being provided with a **corn variety trial** data set.
 This data contains over **164,000 rows** spanning **10 years** (2014-2023), **45 sites** across the USA, for a total of **270** site-years, where over **5,000** corn hybrids were evaluated.  
 
 You are being provided with the following **training data** for years 2014-2023:   
-
+  
   - Trait information (including site, year, hybrid, yield, and grain moisture)  
-  - Meta information (including site, year, previous crop, longitude, and latitude)  
-  - Soil information (including site, year, soil pH, soil organic matter, soil P, soil K)  
+- Meta information (including site, year, previous crop, longitude, and latitude)  
+- Soil information (including site, year, soil pH, soil organic matter, soil P, soil K)  
 
 You are also being provided with the following **testing data** for year 2024:  
   - Submission information (site, year, hybrid, **no yield**)  
-  - Meta information (same as training)  
-  - Soil information (same as training)  
+- Meta information (same as training)  
+- Soil information (same as training)  
 
 > You are tasked in training machine learning models using the training data to predict yield on the test data.  
 
@@ -60,31 +60,31 @@ For ex. in class we summarized weather on a monthly basis, but perhaps this is n
 # E. Modeling strategies  
 You are asked to fully train two different machine learning models:  
   - XGboost (everyone)  
-  - **One more model of your choice not used in class**.  
+- **One more model of your choice not used in class**.  
 
 You can find a list of all tydymodels supported models here:  
-https://www.tidymodels.org/find/parsnip/  
-
-# F. Training strategies  
-For both XGboost and your model of choice, the entire training process is up to you.  
-That means you decide things like  
-  - Data split proportions  
-  - Pre-processing steps  
-  - Hyper-parameters to fine tune  
-  - Search strategy  
-  - Resampling strategy  
-  - Which metric to use to select best model  
-  - Which type of model selection to use (e.g., best model, best within 1 sd, etc.)  
+  https://www.tidymodels.org/find/parsnip/  
   
+  # F. Training strategies  
+  For both XGboost and your model of choice, the entire training process is up to you.  
+That means you decide things like  
+- Data split proportions  
+- Pre-processing steps  
+- Hyper-parameters to fine tune  
+- Search strategy  
+- Resampling strategy  
+- Which metric to use to select best model  
+- Which type of model selection to use (e.g., best model, best within 1 sd, etc.)  
+
 # G. Communicating your results  
 You will be required to create a **shiny app** to communicate your results.  
 Select one of your final models (XGboost or the other one), and display its results in the app.
 While the shiny app design is up to you, it should contain:  
   - At least one EDA on yield based on the training data  
-  - EDA on at least 1 predictor variable of each group (soil, weather)  
-  - At least one interactive component  
-  - A plot showing the most important variables in your model  
-  - A plot for predicted vs observed with R2 and RMSE on your testing set (not the one I provide)  
+- EDA on at least 1 predictor variable of each group (soil, weather)  
+- At least one interactive component  
+- A plot showing the most important variables in your model  
+- A plot for predicted vs observed with R2 and RMSE on your testing set (not the one I provide)  
 
 # H. Troubleshooting  
 You will for sure run into code issues.  
@@ -101,8 +101,8 @@ Make sure to **"Watch"** the repository so you get notified when someone posts o
 > I anticipate all of you will have multiple questions. The goal with using GitHub is that you can help each other. You will be graded for participation both in asking questions on GitHub and also helping others with their questions.  
 
 With that, when you have issues running code, here are a few resources you can use, in chronological order:  
-
-- **Yourself**: Read the error message, see if you can interpret it and understand what is going on. A message like "Error: object yield could not be found" is self-explanatory.    
+  
+  - **Yourself**: Read the error message, see if you can interpret it and understand what is going on. A message like "Error: object yield could not be found" is self-explanatory.    
 - **Google**: Sometimes just copying an error message and pasting on Google can help you find posts with the answer.  
 - **Peers**: ask your classmates using GitHub.  
 - **Me**: after you have gone through all the sources above without success, I will certainly be glad to assist you. I want to be the last resource you use because that's how it will be after our class is finished: I will be available to assist you in anything R-related in your career, but you will also need to attempt solving them before you reach out.  
@@ -174,7 +174,7 @@ train %>%
 
 meta %>% 
   distinct(site
-           )
+  )
 summary(data_full)
 
 (unique(train$site) == unique(meta$site))
@@ -209,9 +209,9 @@ data_model <- data_model %>%
 ```
 
 ```{r}
- data_model <- data_model %>%
+data_model <- data_model %>%
   mutate(
-year_dbl = as.double(year)) %>%
+    year_dbl = as.double(year)) %>%
   mutate(site_chr = as.character(site)) #added this in case the ML component needs it in character format
 
 
@@ -284,7 +284,7 @@ Significant variation in yield is observed across hybrids, indicating that genet
 
 
 ```{r Feature Engineering}
-  head(data_model$date_planted)
+head(data_model$date_planted)
 ```
 
 
@@ -306,7 +306,7 @@ glimpse(data_model[, c("date_planted", "date_harvested", "planting_month", "harv
 
 ```{r Days to Harvest}
 data_model <- data_model %>%
-mutate(days_to_harvest = as.numeric(date_harvested - date_planted))
+  mutate(days_to_harvest = as.numeric(date_harvested - date_planted))
 summary(data_model$days_to_harvest)
 
 ```
@@ -321,7 +321,7 @@ The above plot does not suggest a clear linear relationship between days to harv
 ```{r planting month exploration}
 
 ggplot(data_model, aes(x = factor(planting_month), y = yield_mg_ha)) +
- geom_boxplot()
+  geom_boxplot()
 
 ```
 
@@ -377,7 +377,7 @@ get_daymet_data <- function(site, year, latitude, longitude) {
 # Loop through all site-years and combine results
 #use_csv = T
 #if (use_csv) {
- # weather_daily <- read.csv("../Data/weather_daily.csv")
+# weather_daily <- read.csv("../Data/weather_daily.csv")
 #} else {
 weather_daily <- purrr::pmap_dfr(
   site_years,
@@ -465,7 +465,7 @@ final_data <- data_model_weather %>%
     
     total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
     mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
-   total_gdd10, gdd10_apr_sep,
+    total_gdd10, gdd10_apr_sep,
     mean_srad, mean_vp, mean_dayl
   )
 
@@ -531,10 +531,10 @@ ggsave(plot = density_plot,
        height = 6,
        width = 9,
        dpi = 600)
-       
-       
-       
-       
+
+
+
+
 
 
 ```
@@ -609,9 +609,9 @@ xgb_grid
 #set.seed(432)
 
 #xgb_grid <- grid_latin_hypercube(
- # trees(range = c(300L, 1200L)),
- # tree_depth(range = c(2L, 10L)),
- # min_n(range = c(2L, 40L)),
+# trees(range = c(300L, 1200L)),
+# tree_depth(range = c(2L, 10L)),
+# min_n(range = c(2L, 40L)),
 #  learn_rate(range = c(-3, -0.5)),
 #  size = 20
 #)
@@ -638,301 +638,3 @@ xgb_res <- tune_race_anova(
 
 stopImplicitCluster()
 ```
-
-```{r ANOVA race results}
-png("../Output/corn_race.png", width = 800, height = 600)
-
-plot_race(xgb_res)
-xgb_res$.metrics[[2]]
-dev.off()
-cat("blubby says wuppa")
-
-
-
-```
-
-
-```{r finding RMSE}
-
-bestcorn_rmse <- xgb_res %>%
-      select_best(metric = "rmse")%>%
-  mutate(source = "bestcorn_rmse")
-
-bestcorn_rmse
-```
-
-
-```{r RMSE within 1% loss }
-
-
-corn_rmse_pct_loss <- xgb_res %>% 
-  select_by_pct_loss("min_n",
-                     metric = "rmse",
-                     limit = 1
-                     )%>% 
-  mutate(source = "corn_rmse_pct_loss")
-
-corn_rmse_pct_loss
-
-
-
-```
-
-```{r rmse_one_std_Err}
-corn_rmse_one_std_err <- xgb_res %>% 
-  select_by_one_std_err(metric = "rmse",
-                        eval_time = 100,
-                        trees
-                        )%>% 
-  mutate(source = "corn_rmse_one_std_err")
-
-corn_rmse_one_std_err
-```
-
-
-```{r R2 for best model}
-corn_r2 <- xgb_res %>% 
-  select_best(metric = "rsq")%>% 
-  mutate(source = "corn_r2")
-
-corn_r2
-
-
-```
-
-```{r r^2 with 1% loss}
-
-corn_r2_pct_loss <- xgb_res %>% 
-  select_by_pct_loss("min_n",
-                     metric = "rsq",
-                     limit = 1
-                     ) %>% 
-  mutate(source = "corn_r2_pct_loss")
-
-corn_r2_pct_loss
-
-```
-
-
-
-```{r r2 one std error}
-corn_r2_one_std_error <- xgb_res %>% 
-  select_by_one_std_err(metric = "rsq",
-                        eval_time = 100,
-                        trees
-                        ) %>%
-  mutate(source = "corn_r2_one_std_error")
-
-corn_r2_one_std_error
-```
-```{r compare metrics}
-
-bestcorn_rmse %>% 
-  bind_rows(corn_rmse_pct_loss, 
-            corn_rmse_one_std_err, 
-            corn_r2, 
-            corn_r2_pct_loss, 
-            corn_r2_one_std_error)
-```
-
-#XG Boost Final Spec
-```{r final corn}
-final_corn <- boost_tree(
-  trees = corn_rmse_pct_loss$trees,           
-  tree_depth = corn_rmse_pct_loss$tree_depth, 
-  min_n = corn_rmse_pct_loss$min_n,           
-  learn_rate = corn_rmse_pct_loss$learn_rate
-) %>%
-  set_engine("xgboost") %>%
-  set_mode("regression")
-
-final_corn
-```
-```{r saving XGBoost workflow operation} 
-#googled this step since we didn't talk about it in class from tidypredict and tidymodels.com. 
-
-
-final_corn_op <- workflow() %>%
-  add_model (final_corn) %>%
-  add_recipe(corn_recipe)
-
-final_corn_trainer <- final_corn_op %>%
-  fit(data = corn_train)
-
-#saveRDS will be used to save the model from tidymodels
-saveRDS(final_corn_trainer, file = "../Data/final_corn_trainer.rds")
-
-
-```
-
-
-
-#XG Boost Final Fit
-
-```{r final_fit}
-set.seed(12)
-corny_fit <- last_fit(final_corn, corn_recipe, split = corn_split)
-
-
-corny_fit %>%
-  collect_predictions()
-```
-
-
-```{r test evaluation}
-
-test_corn_met <- corny_fit %>%
-  collect_metrics() %>% 
-  mutate(estimate = round(.estimate, 3))
-
-test_corn_met
-```
-
-```{r training set evaluation}
-final_corn %>%
-  fit(yield_mg_ha ~ .,
-      data = bake(corn_prep,
-                  corn_train)) %>%
-  augment(new_data = bake(corn_prep,
-                          corn_train)) %>%
-  rmse(yield_mg_ha, .pred) %>%
-  bind_rows(
-
-
-# R2
-final_corn %>%
-  fit(yield_mg_ha ~ .,
-      data = bake(corn_prep,
-                  corn_train)) %>%
-  augment(new_data = bake(corn_prep,
-                          corn_train)) %>%
-  rsq(yield_mg_ha, .pred))
-
-
-```
-
-```{r final fit}
-
-corny_fit %>%
-  collect_predictions() %>%
-  ggplot(aes(x = yield_mg_ha,
-             y = .pred)) +
-  geom_point() +
-  geom_abline() +
-  geom_smooth(method = "lm") +
-  scale_x_continuous(limits = c(0, 30)) +
-  scale_y_continuous(limits = c(0, 30))
-
-```
-#XG Boost Plot
-```{r predicted v observed plot}
-publication_corn <- corny_fit %>%
-  collect_predictions() %>%
-  ggplot(aes(x = yield_mg_ha,
-             y = .pred)) +
-  # Changing the shape of the points to
-  geom_point() +
-  
-
-  # Changing the color and linetype of abline
-  geom_abline(color = "red", linetype = 2) +
-
-  geom_smooth(method = "lm") +
-  labs(x = "Observed Yield (mg_ha)",
-       y = "Predicted Yield (mg_ha)")+
-  # Annotate R-sq and RMSE value in the plot
-
-
-  scale_x_continuous(limits = c(0, 30)) +
-  scale_y_continuous(limits = c(0, 30)) +
-
-  # Changing the theme of the plot
-
-
-cat(paste0("\\nSaving...... publication ready plot for test dataset\\n"))
-
-ggsave(plot = publication_corn,
-       path = here("Output"),
-       filename = "model_perf_test_data.png",
-       height = 6,
-       width = 9,
-       dpi = 600)
-
-
-
-```
-##XG Boost Variable Importance: 
-
-```{r}
-vip <- final_corn %>%
-  fit(yield_mg_ha ~ .,
-         data = bake(corn_prep, corn_train)) %>% 
-    vi() %>%
-  mutate(
-    Variable = fct_reorder(Variable,
-                           Importance)
-  ) %>%
-  dplyr::filter(Importance != 0) %>%
-  ggplot(aes(x = Importance,
-             y = Variable,
-             fill = Importance)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0)) + 
-  
-  labs(y = NULL)+
-  theme(panel.background  = element_rect(fill = "gray82"),
-        panel.grid = element_blank())
-
-cat(paste0("\\nSaving...... publication ready plot for variable importance\\n"))
-
-ggsave(plot = vip,
-       path = here("output"),
-       filename = "vip_test_corn.png",
-       height = 9,
-       width = 15,
-       dpi = 600)
-
-
-```
-#Decision Tree 
-
-
-```{r decision tree load-in}
-#Decision Tree Model Specification:
-
-library(rpart)
-
-tree_model <- rpart(yield_mg_ha ~ .,
-data = corn_train, 
-method = "regression",
-minsplit = 2,
-minbucket = 1,
-cp = -1 )
-```
-
-
-```{r variable importance: }
-
-#variable importance view for decision tree:
-
-tree_model$variable importance
-
-#viewing cross-validation results: 
-printcp(tree_model)
-
-```
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-knitr::purl("ProjectInstructions_ML.qmd", output = "sapelo_script.R", documentation = 0)
-```
-
