@@ -217,6 +217,17 @@ final_test <- data_model_weather %>%
 
 #XGBoost Prediction
 ```{r}
+library(tidymodels)
+library(finetune)
+library(vip)
+library(xgboost)
+library(tidyverse)
+library(doParallel)
+
+library(here)
+
+
+
 
 final_corn_trainer <- readRDS("../Data/final_corn_trainer.rds")
 
