@@ -217,10 +217,81 @@ final_test <- data_model_weather %>%
 
 #XGBoost Prediction
 ```{r}
+library(tidymodels)
+library(xgboost)
+library(tidyverse)
 
-final_corn_trainer <- readRDS("../Data/final_corn_trainer.rds")
+
+```
+
+```{r}
+corn_train <- read_csv("../Data/final_data.csv", show_col_types = FALSE) %>%
+  select(
+    yield_mg_ha,
+    hybrid, site, year, previous_crop,
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  ) %>%
+  mutate(
+    hybrid = as.factor(hybrid),
+    site = as.factor(site),
+    year = as.factor(year),
+    previous_crop = as.factor(previous_crop)
+  ) %>%
+  drop_na()
+```
+```{r}
+# test data: keep same predictor columns as training, except yield
+final_test <- final_test %>%
+  select(
+    yield_mg_ha,
+    hybrid, site, year, previous_crop,
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  ) %>%
+  mutate(
+    hybrid = as.factor(hybrid),
+    site = as.factor(site),
+    year = as.factor(year),
+    previous_crop = as.factor(previous_crop)
+  )
+
+```
 
 
+```{r}
+corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+```{r}
+final_corn <- boost_tree(
+  trees = 800,
+  tree_depth = 6,
+  min_n = 10,
+  learn_rate = 0.05
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+```
+
+
+```{r}
+final_corn_op <- workflow() %>%
+  add_model(final_corn) %>%
+  add_recipe(corn_recipe)
+```
+
+```{r}
+final_corn_trainer <- final_corn_op %>%
+  fit(data = corn_train)
 ```
 
 
@@ -231,7 +302,7 @@ test_pred <- predict(
 )
 
 head(test_pred)
-
+test_pred
 ```
 
 
