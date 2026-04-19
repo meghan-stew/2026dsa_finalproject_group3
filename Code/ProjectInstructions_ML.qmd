@@ -972,40 +972,141 @@ ggsave(plot = vip,
 
 
 ```
-#Decision Tree 
+#Generalized Additive Model:
 
 
-```{r decision tree load-in}
-#Decision Tree Model Specification:
 
-library(rpart)
-
-tree_model <- rpart(yield_mg_ha ~ .,
-data = corn_train, 
-method = "regression",
-minsplit = 2,
-minbucket = 1,
-cp = -1 )
-```
-
-
-```{r variable importance: }
-
-#variable importance view for decision tree:
-
-tree_model$variable importance
-
-#viewing cross-validation results: 
-printcp(tree_model)
+```{r GAM load-in}
+#loading libraries
+library(mgcv)
+library(parsnip)
+library(yardstick)
+library(rsample)
 
 ```
 
 
+```{r GAM recipe}
+
+#using the same split as for XG Boost: remember to re-run before XG BOOST section
+
+gam_corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
+  step_string2factor(all_nominal_predictors())%>%
+  step_other(hybrid, threhold = 0.01) %>%
+  step_unknown(all_nominal_predictors ()) %>%
+  step_novel(all_nominal_predictors())
+
+#similar to xgboost recipe setup 
 
 
 
 
 
+```
+
+
+```{r GAM model spec}
+
+gam_corn_spec <- gen_additive_mod() %>%
+  set_engine("mgcv") %>%
+  set_mode("regression")
+
+
+
+```
+
+
+```{r Worfklow}
+
+#gam_corn_wf <- workflow() %>%
+  #add_recipe(gam_corn_recipe) %>%
+ # add_model(
+  #  gam_corn_spec,
+ #   formula = yield_mg_ha ~ 
+  #    s(total_prcp) +
+   # s(prcp_apr_sep) +
+    #s(prcp_may_jul) +
+    #s(prcp_aug) +
+    #s(mean_tmean) +
+    #s(mean_tmax) +
+    #s(mean_tmin) +
+    #s(tmean_apr_sep) +
+    #s(tmax_jul) +
+    #s(total_gdd10) +
+    #s(gdd10_apr_sep) +
+    #s(mean_srad) +
+    #s(mean_vp) +
+    #s(mean_dayl) +
+    #  site + year + hybrid + previous_crop
+ # )
+
+```
+
+
+```{r workaround code for recipe }
+library(mgcv)
+
+gam_fit <- gam(
+  yield_mg_ha ~
+    s(prcp_apr_sep, k = 5) +
+    s(prcp_aug, k = 5) +
+    s(mean_tmean, k = 5) +
+    s(tmax_jul, k = 5) +
+    s(gdd10_apr_sep, k = 5) +
+    s(mean_srad, k = 5) +
+    s(mean_vp, k = 5) +
+    site + year + previous_crop,
+  data = corn_train,
+  method = "REML"
+)
+
+
+```
+
+
+
+
+```{r GAM model fitting}
+#don't use this unless workaround chunk above doesn't work. 
+
+#gam_fit <- fit(gam_corn_wf, data = corn_train)
+
+```
+
+```{r GAM train predictions}
+
+# GAM: predicting on training data:
+corn_train_preds <- tibble( .pred = predict(gam_fit, newdata = corn_train), 
+yield_mg_ha = corn_train$yield_mg_ha 
+
+)
+
+```
+
+
+```{r train metrics}
+#Viewing TRAIN GAM Metrics 
+
+metric_set(rmse, rsq)(corn_train_preds, truth = yield_mg_ha, estimate = .pred)
+
+
+```
+
+```{r test set  }
+corn_test_preds <- tibble( .pred = predict(gam_fit, newdata = corn_test), 
+yield_mg_ha = corn_test$yield_mg_ha 
+
+)
+
+```
+
+```{r test metrics}
+#Viewing TRAIN GAM Metrics 
+
+metric_set(rmse, rsq)(corn_test_preds, truth = yield_mg_ha, estimate = .pred)
+
+
+```
 
 
 
