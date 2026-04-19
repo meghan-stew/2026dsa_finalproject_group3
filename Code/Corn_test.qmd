@@ -273,10 +273,10 @@ corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
 
 ```{r}
 final_corn <- boost_tree(
-  trees = 800,
+  trees = 426,
   tree_depth = 6,
   min_n = 10,
-  learn_rate = 0.05
+  learn_rate = 0.06827874
 ) %>%
   set_engine("xgboost") %>%
   set_mode("regression")
