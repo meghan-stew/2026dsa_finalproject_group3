@@ -229,10 +229,28 @@ library(here)
 
 
 
-final_corn_trainer <- readRDS("../Data/final_corn_trainer.rds")
 
-
+corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
 ```
+
+```{r}
+final_corn <- boost_tree(
+  trees = 426,
+  tree_depth = 6,
+  min_n = 10,
+  learn_rate = 0.06827874
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+```
+
+
+
+
 
 
 ```{r}
