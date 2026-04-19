@@ -2,15 +2,24 @@
 title: "GAM"
 format: html
 editor: visual
+Author: Bishal and Meghan 
 ---
 
-```{r}
+```         
+```
+
+```{r loading libraries }
 library(tidyverse)
 library(lubridate)
 library(daymetr)
 library(tidymodels)
 library(mgcv)
 
+
+
+```
+
+```{r defining test set }
 test <- read_csv("../Data/testing/testing_submission.csv") %>%
   mutate(site = substr(site, 1, 4))
 
@@ -21,39 +30,52 @@ soil <- read_csv("../Data/testing/testing_soil.csv") %>%
   separate(site, into = c("site", "year"), sep = "_") %>%
   mutate(year = as.numeric(year))
 
+# keep only test sites that are in meta
 test <- test %>%
   filter(site %in% meta$site)
 
+# standardize names to lower case
 test <- test %>% rename_with(tolower)
 meta <- meta %>% rename_with(tolower)
 soil <- soil %>% rename_with(tolower)
+```
+
+```{r making full dataset }
 
 data_full <- test %>%
   left_join(meta, by = c("site", "year")) %>%
-  left_join(soil, by = c("site", "year"))
+ left_join(soil, by = c("site", "year"))
 
 data_model <- data_full %>%
   select(-soilph, -om_pct, -soilk_ppm, -soilp_ppm) %>%
-  mutate(previous_crop = replace_na(previous_crop, "Unknown")) %>%
   mutate(
+    previous_crop = replace_na(previous_crop, "Unknown"),
     year = as.factor(year),
     site = as.factor(site)
   )
+
+```
+
+```{r site-year format for weather pull}
 
 site_years <- meta %>%
   distinct(site, year, latitude, longitude) %>%
   filter(!is.na(latitude), !is.na(longitude)) %>%
   mutate(year = as.integer(as.character(year)))
 
+```
+
+```{r daymet }
+
 get_daymet_data <- function(site, year, latitude, longitude) {
   d <- download_daymet(
-    site = as.character(site),
-    lat = latitude,
-    lon = longitude,
-    start = year,
-    end = year,
+    site    = as.character(site),
+    lat     = latitude,
+    lon     = longitude,
+    start   = year,
+    end     = year,
     internal = TRUE,
-    silent = TRUE
+    silent   = TRUE
   )
 
   df <- d$data
@@ -66,7 +88,7 @@ get_daymet_data <- function(site, year, latitude, longitude) {
     tmax = df$tmax..deg.c.,
     tmin = df$tmin..deg.c.,
     srad = df$srad..W.m.2.,
-    vp = df$vp..Pa.,
+    vp   = df$vp..Pa.,
     dayl = df$dayl..s.
   )
 }
@@ -83,31 +105,39 @@ weather_daily <- purrr::pmap_dfr(
 
 write.csv(weather_daily, "../Data/weather_daily_test.csv", row.names = FALSE)
 
+```
+
+```{r feature engineering weather }
 weather_features <- weather_daily %>%
   mutate(
-    date = as.Date(yday - 1, origin = paste0(year, "-01-01")) + 1,
+    date  = as.Date(yday - 1, origin = paste0(year, "-01-01")) + 1,
     month = month(date),
     tmean = (tmax + tmin) / 2,
     gdd10 = pmax(tmean - 10, 0)
   ) %>%
   group_by(site, year) %>%
   summarise(
-    total_prcp = sum(prcp, na.rm = TRUE),
-    prcp_apr_sep = sum(prcp[month %in% 4:9], na.rm = TRUE),
-    prcp_may_jul = sum(prcp[month %in% 5:7], na.rm = TRUE),
-    prcp_aug = sum(prcp[month == 8], na.rm = TRUE),
-    mean_tmax = mean(tmax, na.rm = TRUE),
-    mean_tmin = mean(tmin, na.rm = TRUE),
-    mean_tmean = mean(tmean, na.rm = TRUE),
+    total_prcp    = sum(prcp, na.rm = TRUE),
+    prcp_apr_sep  = sum(prcp[month %in% 4:9], na.rm = TRUE),
+    prcp_may_jul  = sum(prcp[month %in% 5:7], na.rm = TRUE),
+    prcp_aug      = sum(prcp[month == 8], na.rm = TRUE),
+    mean_tmax     = mean(tmax, na.rm = TRUE),
+    mean_tmin     = mean(tmin, na.rm = TRUE),
+    mean_tmean    = mean(tmean, na.rm = TRUE),
     tmean_apr_sep = mean(tmean[month %in% 4:9], na.rm = TRUE),
-    tmax_jul = mean(tmax[month == 7], na.rm = TRUE),
-    total_gdd10 = sum(gdd10, na.rm = TRUE),
+    tmax_jul      = mean(tmax[month == 7], na.rm = TRUE),
+    total_gdd10   = sum(gdd10, na.rm = TRUE),
     gdd10_apr_sep = sum(gdd10[month %in% 4:9], na.rm = TRUE),
-    mean_srad = mean(srad, na.rm = TRUE),
-    mean_vp = mean(vp, na.rm = TRUE),
-    mean_dayl = mean(dayl, na.rm = TRUE),
+    mean_srad     = mean(srad, na.rm = TRUE),
+    mean_vp       = mean(vp, na.rm = TRUE),
+    mean_dayl     = mean(dayl, na.rm = TRUE),
     .groups = "drop"
   )
+
+
+```
+
+```{r final test creation}
 
 data_model_weather <- data_model %>%
   mutate(year = as.integer(as.character(year))) %>%
@@ -123,6 +153,10 @@ final_test <- data_model_weather %>%
     mean_srad, mean_vp, mean_dayl
   )
 
+final_test 
+```
+
+```{r corn train load-in}
 corn_train <- read_csv("../Data/final_data.csv", show_col_types = FALSE) %>%
   select(
     yield_mg_ha,
@@ -133,9 +167,9 @@ corn_train <- read_csv("../Data/final_data.csv", show_col_types = FALSE) %>%
     mean_srad, mean_vp, mean_dayl
   ) %>%
   mutate(
-    hybrid = as.factor(hybrid),
-    site = as.factor(site),
-    year = as.factor(year),
+   # hybrid        = as.factor(hybrid),
+    site          = as.factor(site),
+    year          = as.factor(year),
     previous_crop = as.factor(previous_crop)
   ) %>%
   drop_na()
@@ -150,44 +184,38 @@ final_test <- final_test %>%
     mean_srad, mean_vp, mean_dayl
   ) %>%
   mutate(
-    hybrid = as.factor(hybrid),
-    site = as.factor(site),
-    year = as.factor(year),
-    previous_crop = as.factor(previous_crop)
+    site          = factor(site,          levels = levels(corn_train$site)),
+    year          = factor(year,          levels = levels(corn_train$year)),
+    previous_crop = factor(previous_crop, levels = levels(corn_train$previous_crop))
   )
 
-corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
-  step_novel(all_nominal_predictors()) %>%
-  step_unknown(all_nominal_predictors()) %>%
-  step_zv(all_predictors())
-
-final_corn <- gen_additive_mod() %>%
-  set_engine("mgcv") %>%
-  set_mode("regression")
-
-final_corn_op <- workflow() %>%
-  add_recipe(corn_recipe) %>%
-  add_model(
-    final_corn,
-    formula = yield_mg_ha ~
-      s(prcp_apr_sep) +
-      s(tmean_apr_sep) +
-      s(total_gdd10) +
-      s(mean_srad) +
-      s(mean_vp) +
-      hybrid + site + year + previous_crop
+str(final_test[, c("site","year","previous_crop")]
   )
+```
+```{r}
+names(final_test)
 
-final_corn_trainer <- final_corn_op %>%
-  fit(data = corn_train)
+colSums(is.na(final_test[, c(
+  "prcp_apr_sep","prcp_aug","mean_tmean","tmax_jul",
+  "gdd10_apr_sep","mean_srad","mean_vp",
+  "site","year","previous_crop"
+)]))
+```
 
-test_pred <- predict(
-  final_corn_trainer,
-  new_data = final_test %>% select(-yield_mg_ha)
-)
+```{r GAM final prediction}
+gam_fit <- readRDS("../Data/gam_fit.rds")
+class(gam_fit)
 
-head(test_pred)
+gam_preds <- predict(gam_fit, newdata = final_test, type = "response")
 
-write.csv(test_pred, "../Output/test_pred_gam.csv", row.names = FALSE)
+gam_preds
+
+```
+
+
+```{r}
+names(final_test)
+str(final_test[, c("prcp_apr_sep","prcp_aug","mean_tmean",
+                   "tmax_jul","gdd10_apr_sep","mean_srad","mean_vp")])
 ```
 
