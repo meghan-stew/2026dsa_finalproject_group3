@@ -1028,6 +1028,10 @@ metric_set(rmse, rsq)(corn_test_preds, truth = yield_mg_ha, estimate = .pred)
 
 
 ```
+```{r exporting worfklow}
+saveRDS(gam_fit, "../Data/gam_fit.rds")
+
+```
 
 
 
