@@ -1,0 +1,707 @@
+---
+title: "Data Science Applied to Ag - Final Project - ML"
+format:
+  html:
+    embed-resources: true
+    toc: true
+    theme: cerulean
+author: Bishal Gaire and Meghan Stewart 
+---
+
+# A. Introduction  
+This file contains the **instructions** for the final project.  
+
+To get you setup, you will need to:  
+
+  - Student #1: create a repository on your GitHub account. You can call this repository "2026dsa_finalproject_groupX", **where X is the number of your group**. Make it public, add a README, add a .gitignore for R.  
+  - Student #1: follow the steps we did in class to start a new RStudio project with version control.  
+  - Student #1: in your computer, create the sub-folders code, data, output, and move your data set into the `data` folder. Also, student 1 moves this current script into the `code` folder. Do a git stage, commit, push.  
+  - Student #1: on GitHub, go the repository settings and invite your partner to be a collaborator in the repository. That will give them push permission.  
+  - Now, both students should clone this repository on their computers like we did in class. Make sure this step works well and that you can pull and push from GitHub.  
+  - Student 2, after cloning, does a git pull to get all these updates on their computer.  
+  - Student 1 and 2 work together to update the README file. README files should explain what the repository is about, the goals of that project, who is working in it, and any other important details you may find.  
+
+# B. Defining the problem  
+
+You are being provided with a **corn variety trial** data set.  
+This data contains over **164,000 rows** spanning **10 years** (2014-2023), **45 sites** across the USA, for a total of **270** site-years, where over **5,000** corn hybrids were evaluated.  
+
+You are being provided with the following **training data** for years 2014-2023:   
+
+  - Trait information (including site, year, hybrid, yield, and grain moisture)  
+  - Meta information (including site, year, previous crop, longitude, and latitude)  
+  - Soil information (including site, year, soil pH, soil organic matter, soil P, soil K)  
+
+You are also being provided with the following **testing data** for year 2024:  
+  - Submission information (site, year, hybrid, **no yield**)  
+  - Meta information (same as training)  
+  - Soil information (same as training)  
+
+> You are tasked in training machine learning models using the training data to predict yield on the test data.  
+
+One difference from class is that **you are not provided with the test data yield (predicted variable)**, only the predictor variables.  
+Therefore, using the training data wisely to create predictive models will be important.  
+
+
+# C. Open-source data  
+Notice you were provided with the **longitude and latitude** of most of the site-years.  
+You are encouraged to use this information to pull any external open-source data sets like **weather**, or anything else you may find useful.  
+
+This will be up to each team.
+Part of creating a great model is incorporating different pieces of information.  
+
+# D. Feature engineering  
+Your goal is to create good predictor variables in your data set for modelling.  
+
+It is up to each team how you will perform feature engineering.  
+For ex. in class we summarized weather on a monthly basis, but perhaps this is not the best approach.  
+
+
+# E. Modeling strategies  
+You are asked to fully train two different machine learning models:  
+  - XGboost (everyone)  
+  - **One more model of your choice not used in class**.  
+
+You can find a list of all tydymodels supported models here:  
+https://www.tidymodels.org/find/parsnip/  
+
+# F. Training strategies  
+For both XGboost and your model of choice, the entire training process is up to you.  
+That means you decide things like  
+  - Data split proportions  
+  - Pre-processing steps  
+  - Hyper-parameters to fine tune  
+  - Search strategy  
+  - Resampling strategy  
+  - Which metric to use to select best model  
+  - Which type of model selection to use (e.g., best model, best within 1 sd, etc.)  
+  
+# G. Communicating your results  
+You will be required to create a **shiny app** to communicate your results.  
+Select one of your final models (XGboost or the other one), and display its results in the app.
+While the shiny app design is up to you, it should contain:  
+  - At least one EDA on yield based on the training data  
+  - EDA on at least 1 predictor variable of each group (soil, weather)  
+  - At least one interactive component  
+  - A plot showing the most important variables in your model  
+  - A plot for predicted vs observed with R2 and RMSE on your testing set (not the one I provide)  
+
+# H. Troubleshooting  
+You will for sure run into code issues.  
+This is common and expected, and part of the learning process.  
+
+While this is an individual project, I do encourage all students to help each other, especially as you will likely run into similar problems.  
+
+For that to work, we will be using **GitHub** to ask and answer questions.  
+
+ALL QUESTIONS should be asked in our course GitHub page (https://github.com/leombastos/2026_dsa) under "Issues". **Please do not use email for asking questions**.
+
+Make sure to **"Watch"** the repository so you get notified when someone posts on Issues.  
+
+> I anticipate all of you will have multiple questions. The goal with using GitHub is that you can help each other. You will be graded for participation both in asking questions on GitHub and also helping others with their questions.  
+
+With that, when you have issues running code, here are a few resources you can use, in chronological order:  
+
+- **Yourself**: Read the error message, see if you can interpret it and understand what is going on. A message like "Error: object yield could not be found" is self-explanatory.    
+- **Google**: Sometimes just copying an error message and pasting on Google can help you find posts with the answer.  
+- **Peers**: ask your classmates using GitHub.  
+- **Me**: after you have gone through all the sources above without success, I will certainly be glad to assist you. I want to be the last resource you use because that's how it will be after our class is finished: I will be available to assist you in anything R-related in your career, but you will also need to attempt solving them before you reach out.  
+
+# I. Turning it in  
+You are required to turn in the following:  
+  - The github repository URL containing ALL the code for the ML training process  
+  - The completed `testing_submission` file with your predictions for the test data that I shared with you. **NOTE: only fill in the NA cells, DO NOT CHANGE anything else! If you send this file with different column names, etc, you WILL LOSE POINTS!**  
+  - The URL for the published shiny app  
+  - A powerpoint slide named "2026dsa_teamX.ppt" where X is the number of your team. The deck should contain a single slide showing 
+  
+Submit the github URL, the `testing_submisison` csv, and the shiny app URL by **April 30th** 11:59 pm on the following link:  
+https://forms.gle/Es34gk74DHBBSEoa8 
+  
+# J. Grading  
+You will be graded based on:  
+  - following general workflows we did in class for all steps (open-source data retrieval and processing, feature engineering, ML model training, etc.)  
+  - following reproducible standards like sensible folder and file naming, script organization, script comments, etc.  
+  - collaborating with your partner in GitHub  
+  - submitting all three pieces of information (2 URLs, 2 files)  
+  - submitting on time  
+  - having a shiny dashboard with the minimum requirements listed above  
+
+# K. Team work in GitHub  
+Whether you are working with your future-self or as duos, make sure to stage, commit, and push after finishing each of the sub-sections above. When committing, write commit messages that are short and descriptive (e.g., finished wrangling).  
+
+If you are working in duos, make sure to split the workload. I will check your collaborative work through the commit history, and if one student has contributed significantly more than the other, than that will impact grades.  
+
+**Tip 1**: to avoid merge conflicts, make sure to **pull** first, and then start working locally. That will ensure that any changes made by your partner will be "downloaded" before you make changes to the files locally.  
+
+**Tip 2**: make use of the Issues on this repository to set up to-do lists and assign tasks to different people. You can also use each issue/task to discuss how things should be run and get to an agreement.  
+
+# L. Extra  
+Once each team submits their predictions on my test set, I will compare their predictions with the observed values (that you don't have).  
+
+The team that gets the highest **R2** or lowest **RMSE** will receive an award and bragging rights.  
+
+
+```{r Loading the data}
+library(tidyverse)
+
+library(tidyverse)
+
+train <- read_csv("../data/training/training_trait.csv")
+meta  <- read_csv("../data/training/training_meta.csv")
+soil  <- read_csv("../data/training/training_soil.csv")
+
+train <- train %>% rename_with(tolower)
+meta  <- meta  %>% rename_with(tolower)
+soil  <- soil  %>% rename_with(tolower)
+
+data_full <- train %>%
+  left_join(meta, by = c("site", "year")) %>%
+  left_join(soil, by = c("site", "year"))
+
+glimpse(data_full)
+
+```
+```{r Number of missing values}
+colSums(is.na(data_full))
+
+```
+
+```{r Drop critical NA missing variables}
+data_model <- data_full %>%
+  select(-soilph, -om_pct, -soilk_ppm, -soilp_ppm)
+
+glimpse(data_model)
+
+```
+
+```{r Drop missing values of date harvested}
+data_model <- data_model %>%
+  filter(!is.na(date_harvested))
+```
+
+```{r Previous crop missing values}
+data_model <- data_model %>%
+  mutate(previous_crop = replace_na(previous_crop, "Unknown"))
+
+```
+
+```{r}
+ data_model <- data_model %>%
+  mutate(
+year_dbl = as.double(year)) %>%
+  mutate(site_chr = as.character(site)) #added this in case the ML component needs it in character format
+
+
+
+```
+
+
+
+```{r Year and site as factors}
+data_model <- data_model %>%
+  mutate(
+    year = as.factor(year),
+    site = as.factor(site)
+    
+  )
+
+
+glimpse(data_model)
+```
+
+
+```{r Plotting }
+ggplot(data_model, aes(x = yield_mg_ha)) +
+  geom_histogram(bins = 40)
+```
+
+
+
+```{r yield by site}
+ggplot(data_model, aes(x = site, y = yield_mg_ha)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+
+```{r yield by year}
+ggplot(data_model, aes(x = factor(year), y = yield_mg_ha)) +
+  geom_boxplot()
+```
+Yield varies across years with noticeable fluctuations rather than a consistent trend, indicating strong temporal effects. Higher yields are observed in years like 2019 and 2021–2023, while lower yields occur around 2015–2016 and 2020.
+
+```{r Grain moisture}
+ggplot(data_model, aes(x = grain_moisture, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+
+Grain moisture exhibits a weak positive relationship with yield, as indicated by the slight upward trend. However, the high dispersion of observations suggests that moisture alone is not a strong predictor of yield.
+
+```{r hybrid effect}
+ggplot(data_model, aes(x = hybrid, y = yield_mg_ha)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_blank())
+```
+
+```{r}
+top_hybrids <- data_model %>%
+  group_by(hybrid) %>%
+  summarise(n = n()) %>%
+  slice_max(n, n = 10) %>%
+  pull(hybrid)
+
+data_model %>%
+  filter(hybrid %in% top_hybrids) %>%
+  ggplot(aes(x = hybrid, y = yield_mg_ha)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45))
+```
+Significant variation in yield is observed across hybrids, indicating that genetic differences play an important role in determining productivity. Some hybrids consistently outperform others, while variability within hybrids suggests differences in stability across environments.
+
+
+```{r Feature Engineering}
+  head(data_model$date_planted)
+```
+
+
+```{r}
+library(lubridate)
+
+data_model <- data_model %>%
+  mutate(
+    date_planted = mdy(date_planted),
+    date_harvested = mdy(date_harvested),
+    planting_month = month(date_planted),
+    harvest_month = month(date_harvested)
+  )
+```
+
+```{r new engineered variables}
+glimpse(data_model[, c("date_planted", "date_harvested", "planting_month", "harvest_month")])
+```
+
+```{r Days to Harvest}
+data_model <- data_model %>%
+mutate(days_to_harvest = as.numeric(date_harvested - date_planted))
+summary(data_model$days_to_harvest)
+
+```
+
+
+```{r Plotting days to harvest}
+ggplot(data_model, aes(x = days_to_harvest, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+The above plot does not suggest a clear linear relationship between days to harvest and yield given the variability in the data points. 
+```{r planting month exploration}
+
+ggplot(data_model, aes(x = factor(planting_month), y = yield_mg_ha)) +
+ geom_boxplot()
+
+```
+
+
+```{r harvest month boxplot}
+ggplot(data_model, aes(x = factor(harvest_month), y = yield_mg_ha)) +
+  geom_boxplot()
+```
+
+While no strong pattern in yield based on plant month or harvest month is observed above, the range for maximum values seems to trend upward as harvest month increases to later, with higher value averages around months 11 and 10. 
+
+Let's look at how latitude and longitude impact yield: 
+```{r longtitude linear exploration}
+ggplot(data_model, aes(x = longitude, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+
+
+```{r latitude linear exploration}
+ggplot(data_model, aes(x = latitude, y = yield_mg_ha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm")
+```
+No clear pattern based on latitude and longitude. 
+
+```{r}
+glimpse(data_model)
+```
+
+###Open Source Data Pull
+
+```{r one site-year}
+library(daymetr)
+data_model$year[1]
+
+
+daymet_none <- download_daymet(site = data_model$site[1],
+                              lat = data_model$latitude[1],
+                              lon =  data_model$longitude[1],
+                              start = 2014,
+                              end = 2014,
+                              simplify = T
+                              )
+
+glimpse(daymet_none)
+```
+
+
+
+
+
+```{r Drop missing values of latitude and longitude}
+#| message: false
+#| warning: false
+data_model2 <- data_model %>%
+  filter(!is.na(latitude)) %>%
+  filter(!is.na(longitude))
+
+
+colSums(is.na(data_model2))
+
+
+
+```
+
+
+
+For next step, maybe let's try looking at average temperature per site each year pulling from daymet open source database:
+
+```{r pulling Daymet}
+#| message: false
+#| warning: false
+library(daymetr)
+
+daymet_zero <- data_model2 %>%
+  mutate(weather = pmap(list(.y = year_dbl,
+                             .site = site,
+                             .lat = latitude,
+                             .lon = longitude
+                             ),
+                        function(.y, .site, .lat, .lon)
+                          download_daymet(
+                            site = .site,
+                            lat = .lat,
+                 
+                                       lon = .lon,
+                            start = .y,
+                            end = .y,
+                            simplify = T,
+                            silent = T
+                          ) %>%
+                          rename(.year = year,
+                                .site = site
+                          )
+
+                        ))
+
+daymet_zero
+
+
+#to-do for Meghan: make data table sorted by max yield per site, then 
+```
+
+We'll come back to the open-source data when it works. 
+
+#XG Boost: Corn Yield 
+```{r XG Boost Libraries}
+#| message: false
+#| warning: false
+
+library(tidymodels)
+library(finetune)     
+library(vip)          
+library(xgboost)      
+library(ranger)       
+library(tidyverse)    
+library(doParallel)   
+```
+
+*Preprocessing*
+
+Let’s remove unneeded columns replicate, block,  year in factor form, and days_to_harvest since less information was gleaned from harvest length than harvest month and planting month:
+
+and remove site to as a factor
+
+```{r XG Boost column cleaning}
+
+corn_data <- data_model2 %>%
+  select(-replicate, -block, -year, -days_to_harvest, -site, -date_planted, -date_harvested)
+
+glimpse(corn_data)
+
+```
+
+
+```{r renaming month columns}
+corn_data2 <- corn_data %>%
+  mutate(harvest_month = month(harvest_month, label = T)) %>%
+  mutate(planting_month = month(planting_month, label = T))
+  
+  corn_data2
+```
+
+
+
+```{r corn_split}
+set.seed(931735) # Setting seed to get reproducible results 
+corn_split <- initial_split(
+  corn_data2, 
+  prop = .7, 
+  strata = yield_mg_ha  # Stratify by target variable
+  )
+corn_split
+```
+
+
+
+```{r corn_train}
+corn_train <- training(corn_split)  # 70% of data
+corn_train #Training data frame 
+```
+
+
+```{r open source additional data}
+library(tidyverse)
+library(lubridate)
+library(daymetr)
+
+site_years <- data_model %>%
+  distinct(site, year, latitude, longitude) %>%
+  filter(!is.na(latitude), !is.na(longitude)) %>%
+  mutate(year = as.integer(as.character(year)))
+
+get_daymet_data <- function(site, year, latitude, longitude) {
+  d <- download_daymet(
+    site = as.character(site),
+    lat = latitude,
+    lon = longitude,
+    start = year,
+    end = year,
+    internal = TRUE,
+    silent = TRUE
+  )
+  
+  df <- d$data
+  
+  tibble(
+    site = site,
+    year = year,
+    yday = df$yday,
+    prcp = df$prcp..mm.day.,
+    tmax = df$tmax..deg.c.,
+    tmin = df$tmin..deg.c.,
+    srad = df$srad..W.m.2.,
+    vp = df$vp..Pa.,
+    dayl = df$dayl..s.
+  )
+}
+
+weather_daily <- purrr::pmap_dfr(
+  site_years,
+  function(site, year, latitude, longitude) {
+    tryCatch(
+      get_daymet_data(site, year, latitude, longitude),
+      error = function(e) NULL
+    )
+  }
+)
+
+weather_features <- weather_daily %>%
+  mutate(
+    date = as.Date(yday - 1, origin = paste0(year, "-01-01")) + 1,
+    month = month(date),
+    tmean = (tmax + tmin) / 2,
+    gdd10 = pmax(tmean - 10, 0)
+  ) %>%
+  group_by(site, year) %>%
+  summarise(
+    total_prcp = sum(prcp, na.rm = TRUE),
+    prcp_apr_sep = sum(prcp[month %in% 4:9], na.rm = TRUE),
+    prcp_may_jul = sum(prcp[month %in% 5:7], na.rm = TRUE),
+    prcp_aug = sum(prcp[month == 8], na.rm = TRUE),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_tmin = mean(tmin, na.rm = TRUE),
+    mean_tmean = mean(tmean, na.rm = TRUE),
+    tmean_apr_sep = mean(tmean[month %in% 4:9], na.rm = TRUE),
+    tmax_jul = mean(tmax[month == 7], na.rm = TRUE),
+    total_gdd10 = sum(gdd10, na.rm = TRUE),
+    gdd10_apr_sep = sum(gdd10[month %in% 4:9], na.rm = TRUE),
+    mean_srad = mean(srad, na.rm = TRUE),
+    mean_vp = mean(vp, na.rm = TRUE),
+    mean_dayl = mean(dayl, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+data_model_weather <- data_model %>%
+  mutate(year = as.integer(as.character(year))) %>%
+  left_join(weather_features, by = c("site", "year"))
+```
+
+
+```{r Looking at the model}
+glimpse(weather_daily)
+glimpse(weather_features)
+glimpse(data_model_weather)
+```
+
+
+```{r Group by and Summarise}
+data_model_weather %>%
+  group_by(site, year) %>%
+  summarise(n_weather = n_distinct(total_prcp)) %>%
+  summary()
+```
+
+We used the latitude and longitude of each site-year to retrieve daily weather data from the Daymet database. The weather variables included precipitation, temperature, solar radiation, vapor pressure, and day length. These daily observations were aggregated into site-year level features such as total precipitation, average temperature, and growing degree days (GDD), along with seasonal indicators. The resulting weather features were then merged back into the main dataset by site and year, ensuring consistent environmental conditions across all observations within each site-year.
+
+```{r Names in the dataset}
+names(data_model_weather)
+```
+
+```{r Selection of variables}
+final_data <- data_model_weather %>%
+  select(
+    yield_mg_ha,
+    
+    hybrid, site, year, previous_crop,
+    grain_moisture,
+    
+    planting_month, harvest_month, days_to_harvest,
+    
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  )
+```
+
+
+```{r Change to factors}
+final_data <- final_data %>%
+  mutate(
+    hybrid = as.factor(hybrid),
+    site = as.factor(site),
+    year = as.factor(year),
+    previous_crop = as.factor(previous_crop)
+  )
+```
+
+
+```{r Final data with no NA}
+final_data <- final_data %>%
+  drop_na()
+glimpse(final_data)
+summary(final_data$yield_mg_ha)
+```
+
+
+```{r XGBoost modeling}
+#| message: false
+#| warning: false
+
+library(tidymodels)
+library(finetune)
+library(vip)
+library(xgboost)
+library(tidyverse)
+library(doParallel)
+```
+
+```{r Data split}
+set.seed(931735)
+
+corn_split <- initial_split(
+  final_data,
+  prop = 0.7,
+  strata = yield_mg_ha
+)
+
+corn_train <- training(corn_split)
+corn_test  <- testing(corn_split)
+```
+
+```{r Target distribution}
+ggplot() +
+  geom_density(data = corn_train, aes(x = yield_mg_ha), color = "red") +
+  geom_density(data = corn_test, aes(x = yield_mg_ha), color = "blue")
+
+```
+
+
+```{r coorn recipe}
+corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
+  step_rm(mean_dayl, hybrid) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+corn_prep <- corn_recipe %>%
+  prep()
+
+corn_prep
+```
+
+
+```{r Model specification}
+xgb_spec <- boost_tree(
+  trees = tune(),
+  tree_depth = tune(),
+  min_n = tune(),
+  learn_rate = tune()
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+xgb_spec
+```
+
+```{r Cross validation setup}
+set.seed(235)
+
+resampling_foldcv <- vfold_cv(
+  corn_train,
+  v = 10,
+  strata = yield_mg_ha
+)
+
+resampling_foldcv
+
+```
+
+
+```{r Grid of hyperparameter}
+set.seed(432)
+
+xgb_grid <- grid_latin_hypercube(
+  trees(range = c(300L, 1200L)),
+  tree_depth(range = c(2L, 10L)),
+  min_n(range = c(2L, 40L)),
+  learn_rate(range = c(-3, -0.5)),
+  size = 20
+)
+
+xgb_grid
+```
+
+
+```{r}
+registerDoParallel(cores = parallel::detectCores() - 1)
+
+set.seed(76544)
+
+xgb_res <- tune_race_anova(
+  object = xgb_spec,
+  preprocessor = corn_recipe,
+  resamples = resampling_foldcv,
+  grid = xgb_grid,
+  control = control_race(save_pred = TRUE)
+)
+
+stopImplicitCluster()
+```
+
+
+

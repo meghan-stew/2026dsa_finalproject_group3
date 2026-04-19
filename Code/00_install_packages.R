@@ -1,0 +1,22 @@
+install.packages(
+  c(
+    "dplyr",
+    "ggplot2",
+    "parsnip",
+    "plotly",
+    "purrr",
+    "readr",
+    "recipes",
+    "rsample",
+    "shiny",
+    "stringr",
+    "tibble",
+    "tidyr",
+    "tune",
+    "vip",
+    "workflows",
+    "yardstick",
+    "xgboost",
+    "ranger"
+  )
+)

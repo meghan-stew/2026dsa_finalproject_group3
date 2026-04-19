@@ -573,13 +573,19 @@ xgb_spec <- boost_tree(
 xgb_spec
 ```
 ```{r cross-validation}
+
+xgb_wf <- workflow() %>%
+  add_model(xgb_spec) %>%
+  add_recipe(corn_recipe)
+
+
 # Cross-Validation Setup
 
-set.seed(235)
+set.seed(123)
 
 resampling_foldcv <- vfold_cv(
   corn_train,
-  v = 5,
+  v = 3,
   strata = yield_mg_ha
 )
 
@@ -589,14 +595,12 @@ resampling_foldcv
 ```{r hyperparameter-grid}
 # Hyperparameter Grid for XGBoost
 
-set.seed(432)
-
-xgb_grid <- grid_space_filling(
-  trees(range = c(300L, 1000L)),
-  tree_depth(range = c(2L, 8L)),
-  min_n(range = c(2L, 30L)),
-  learn_rate(range = c(-3, -1)),
-  size = 10
+xgb_grid <- grid_regular(
+  trees(range = c(300L, 700L)),
+  tree_depth(range = c(3L, 6L)),
+  min_n(range = c(3L, 15L)),
+  learn_rate(range = c(-2, -1)),
+  levels =  2
 )
 
 xgb_grid
@@ -620,21 +624,18 @@ xgb_grid
 ##Parallel Processing and ANOVA Racing
 
 
-```{r ANOVA racing}
+```{r ANOvaracing}
 #| warning: false
-registerDoParallel(cores = parallel::detectCores() - 1)
 
-set.seed(76544)
-
-xgb_res <- tune_race_anova(
-  object = xgb_spec,
-  preprocessor = corn_recipe,
+xgb_res <- tune_grid(
+  xgb_wf,
   resamples = resampling_foldcv,
   grid = xgb_grid,
-  control = control_race(save_pred = TRUE)
+  metrics = metric_set(rmse, rsq),
+  control = control_grid(save_pred = TRUE)
 )
 
-stopImplicitCluster()
+collect_metrics(xgb_res)
 ```
 
 ```{r ANOVA race results}
