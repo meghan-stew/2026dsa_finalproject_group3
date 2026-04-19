@@ -218,14 +218,17 @@ final_test <- data_model_weather %>%
 #XGBoost Prediction
 ```{r}
 
-final_corn_trainer <- readRDS("~/Crop_Soil_Stats/2026dsa_finalproject_group3/Data/final_corn_trainer.rds")
+final_corn_trainer <- readRDS("../Data/final_corn_trainer.rds")
 
 
 ```
 
 
 ```{r}
-test_pred <- predict(final_corn_trainer, new_data = final_test)
+test_pred <- predict(
+  final_corn_trainer,
+  new_data = final_test %>% select(-yield_mg_ha)
+)
 
 head(test_pred)
 
