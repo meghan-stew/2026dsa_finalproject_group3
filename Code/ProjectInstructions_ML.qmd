@@ -487,7 +487,7 @@ summary(final_data$yield_mg_ha)
 
 write.csv(final_data, "../Data/final_data.csv")
 
-head(final_data)
+
 
 ```
 
@@ -549,85 +549,15 @@ corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
   
   step_novel(all_nominal_predictors()) %>%
   step_unknown(all_nominal_predictors()) %>%
-  step_other(hybrid, threshold = 0.01) %>%
-  step_dummy(all_nominal_predictors(), one_hot = TRUE) %>%
-  
+  step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors()) # for zero variance variables 
 
-#corn_prep <- corn_recipe %>%
-  #testing just the training split
- # prep(training = corn_train)
+corn_prep <- corn_recipe %>%
+  prep()
 
-#corn_prep
-
-#baked_train <- bake(corn_prep, new_data = NULL)
-
-#baked_train
-
-
-
+corn_prep
 ```
-```{r test untuned model}
-
-#xgb_test_spec <- boost_tree(
- # trees = 300,
- # tree_depth = 4,
-#  min_n = 10,
- # learn_rate = 0.05
-#) %>%
- # set_engine("xgboost", nthread = 1) %>%
-#  set_mode("regression")
-
-#xgb_test_fit <- xgb_test_spec %>%
-#  fit(yield_mg_ha ~ ., data = baked_train)
-
-
-```
-
-
-```{r test anova race latin hypercube }
-#set.seed(235)
-#small_folds <- vfold_cv(corn_train, v = 5, strata = yield_mg_ha)
-
-#set.seed(432)
-#small_grid <- grid_space_filling(
- # trees(range = c(300L, 600L)),
-#  tree_depth(range = c(2L, 6L)),
- # min_n(range = c(5L, 20L)),
- # learn_rate(range = c(-2, -1)),
- # size = 5
-#)
-```
-
-```{r test workflow with ANOVA}
-#xgb_wf_test <- workflow() %>%
-  #add_recipe(corn_recipe) %>%
-  #add_model(xgb_spec)
-
-#test small anova chunk below for troubleshooting
-
-#registerDoParallel(cores = max(1, parallel::detectCores() - 1))
-
-#set.seed(76544)
-
-#xgb_res <- tune_race_anova(
-#  xgb_wf_test,
-#  resamples = small_folds,
-#  grid = small_grid,
- # control = control_race(verbose_elim = TRUE)
-#)
-
-#stopImplicitCluster()
-```
-
-
-
-
-
-
-
-```{r final workflow and xgboost-specification}
-
+```{r xgboost-specification}
 
 # XGBoost Model Specification
 
@@ -641,23 +571,21 @@ xgb_spec <- boost_tree(
   set_mode("regression")
 
 xgb_spec
-
-#workflow allows us to load xgboost into other test qmd. 
-
-xgb_wf <- workflow() %>%
-  add_recipe(corn_recipe) %>%
-  add_model(xgb_spec)
-
-
 ```
 ```{r cross-validation}
+
+xgb_wf <- workflow() %>%
+  add_model(xgb_spec) %>%
+  add_recipe(corn_recipe)
+
+
 # Cross-Validation Setup
 
-set.seed(235)
+set.seed(123)
 
 resampling_foldcv <- vfold_cv(
   corn_train,
-  v = 5,
+  v = 3,
   strata = yield_mg_ha
 )
 
@@ -667,14 +595,12 @@ resampling_foldcv
 ```{r hyperparameter-grid}
 # Hyperparameter Grid for XGBoost
 
-set.seed(432)
-
-xgb_grid <- grid_latin_hypercube(
-  trees(range = c(300L, 1000L)),
-  tree_depth(range = c(2L, 8L)),
-  min_n(range = c(2L, 30L)),
-  learn_rate(range = c(-3, -1)),
-  size = 10
+xgb_grid <- grid_regular(
+  trees(range = c(300L, 700L)),
+  tree_depth(range = c(3L, 6L)),
+  min_n(range = c(3L, 15L)),
+  learn_rate(range = c(-2, -1)),
+  levels =  2
 )
 
 xgb_grid
@@ -698,23 +624,18 @@ xgb_grid
 ##Parallel Processing and ANOVA Racing
 
 
-```{r ANOVA racing}
+```{r ANOvaracing}
 #| warning: false
 
-
-registerDoParallel(cores = parallel::detectCores() - 1)
-
-set.seed(76544)
-
-xgb_res <- tune_race_anova(
+xgb_res <- tune_grid(
   xgb_wf,
   resamples = resampling_foldcv,
   grid = xgb_grid,
-  control = control_race(verbose_elim = TRUE)
+  metrics = metric_set(rmse, rsq),
+  control = control_grid(save_pred = TRUE)
 )
-#added verbose function because of runtime issues with this chunk. 
 
-stopImplicitCluster()
+collect_metrics(xgb_res)
 ```
 
 ```{r ANOVA race results}
@@ -816,10 +737,10 @@ bestcorn_rmse %>%
 #XG Boost Final Spec
 ```{r final corn}
 final_corn <- boost_tree(
-  trees = 426,           
-  tree_depth = 6, 
-  min_n = 10,           
-  learn_rate = 0.06827874
+  trees = corn_rmse_pct_loss$trees,           
+  tree_depth = corn_rmse_pct_loss$tree_depth, 
+  min_n = corn_rmse_pct_loss$min_n,           
+  learn_rate = corn_rmse_pct_loss$learn_rate
 ) %>%
   set_engine("xgboost") %>%
   set_mode("regression")

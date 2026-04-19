@@ -1,0 +1,193 @@
+---
+title: "GAM"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(daymetr)
+library(tidymodels)
+library(mgcv)
+
+test <- read_csv("../Data/testing/testing_submission.csv") %>%
+  mutate(site = substr(site, 1, 4))
+
+meta <- read_csv("../Data/testing/testing_meta.csv") %>%
+  mutate(site = substr(site, 1, 4))
+
+soil <- read_csv("../Data/testing/testing_soil.csv") %>%
+  separate(site, into = c("site", "year"), sep = "_") %>%
+  mutate(year = as.numeric(year))
+
+test <- test %>%
+  filter(site %in% meta$site)
+
+test <- test %>% rename_with(tolower)
+meta <- meta %>% rename_with(tolower)
+soil <- soil %>% rename_with(tolower)
+
+data_full <- test %>%
+  left_join(meta, by = c("site", "year")) %>%
+  left_join(soil, by = c("site", "year"))
+
+data_model <- data_full %>%
+  select(-soilph, -om_pct, -soilk_ppm, -soilp_ppm) %>%
+  mutate(previous_crop = replace_na(previous_crop, "Unknown")) %>%
+  mutate(
+    year = as.factor(year),
+    site = as.factor(site)
+  )
+
+site_years <- meta %>%
+  distinct(site, year, latitude, longitude) %>%
+  filter(!is.na(latitude), !is.na(longitude)) %>%
+  mutate(year = as.integer(as.character(year)))
+
+get_daymet_data <- function(site, year, latitude, longitude) {
+  d <- download_daymet(
+    site = as.character(site),
+    lat = latitude,
+    lon = longitude,
+    start = year,
+    end = year,
+    internal = TRUE,
+    silent = TRUE
+  )
+
+  df <- d$data
+
+  tibble(
+    site = site,
+    year = year,
+    yday = df$yday,
+    prcp = df$prcp..mm.day.,
+    tmax = df$tmax..deg.c.,
+    tmin = df$tmin..deg.c.,
+    srad = df$srad..W.m.2.,
+    vp = df$vp..Pa.,
+    dayl = df$dayl..s.
+  )
+}
+
+weather_daily <- purrr::pmap_dfr(
+  site_years,
+  function(site, year, latitude, longitude) {
+    tryCatch(
+      get_daymet_data(site, year, latitude, longitude),
+      error = function(e) NULL
+    )
+  }
+)
+
+write.csv(weather_daily, "../Data/weather_daily_test.csv", row.names = FALSE)
+
+weather_features <- weather_daily %>%
+  mutate(
+    date = as.Date(yday - 1, origin = paste0(year, "-01-01")) + 1,
+    month = month(date),
+    tmean = (tmax + tmin) / 2,
+    gdd10 = pmax(tmean - 10, 0)
+  ) %>%
+  group_by(site, year) %>%
+  summarise(
+    total_prcp = sum(prcp, na.rm = TRUE),
+    prcp_apr_sep = sum(prcp[month %in% 4:9], na.rm = TRUE),
+    prcp_may_jul = sum(prcp[month %in% 5:7], na.rm = TRUE),
+    prcp_aug = sum(prcp[month == 8], na.rm = TRUE),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_tmin = mean(tmin, na.rm = TRUE),
+    mean_tmean = mean(tmean, na.rm = TRUE),
+    tmean_apr_sep = mean(tmean[month %in% 4:9], na.rm = TRUE),
+    tmax_jul = mean(tmax[month == 7], na.rm = TRUE),
+    total_gdd10 = sum(gdd10, na.rm = TRUE),
+    gdd10_apr_sep = sum(gdd10[month %in% 4:9], na.rm = TRUE),
+    mean_srad = mean(srad, na.rm = TRUE),
+    mean_vp = mean(vp, na.rm = TRUE),
+    mean_dayl = mean(dayl, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+data_model_weather <- data_model %>%
+  mutate(year = as.integer(as.character(year))) %>%
+  left_join(weather_features, by = c("site", "year"))
+
+final_test <- data_model_weather %>%
+  select(
+    yield_mg_ha,
+    hybrid, site, year, previous_crop,
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  )
+
+corn_train <- read_csv("../Data/final_data.csv", show_col_types = FALSE) %>%
+  select(
+    yield_mg_ha,
+    hybrid, site, year, previous_crop,
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  ) %>%
+  mutate(
+    hybrid = as.factor(hybrid),
+    site = as.factor(site),
+    year = as.factor(year),
+    previous_crop = as.factor(previous_crop)
+  ) %>%
+  drop_na()
+
+final_test <- final_test %>%
+  select(
+    yield_mg_ha,
+    hybrid, site, year, previous_crop,
+    total_prcp, prcp_apr_sep, prcp_may_jul, prcp_aug,
+    mean_tmean, mean_tmax, mean_tmin, tmean_apr_sep, tmax_jul,
+    total_gdd10, gdd10_apr_sep,
+    mean_srad, mean_vp, mean_dayl
+  ) %>%
+  mutate(
+    hybrid = as.factor(hybrid),
+    site = as.factor(site),
+    year = as.factor(year),
+    previous_crop = as.factor(previous_crop)
+  )
+
+corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+final_corn <- gen_additive_mod() %>%
+  set_engine("mgcv") %>%
+  set_mode("regression")
+
+final_corn_op <- workflow() %>%
+  add_recipe(corn_recipe) %>%
+  add_model(
+    final_corn,
+    formula = yield_mg_ha ~
+      s(prcp_apr_sep) +
+      s(tmean_apr_sep) +
+      s(total_gdd10) +
+      s(mean_srad) +
+      s(mean_vp) +
+      hybrid + site + year + previous_crop
+  )
+
+final_corn_trainer <- final_corn_op %>%
+  fit(data = corn_train)
+
+test_pred <- predict(
+  final_corn_trainer,
+  new_data = final_test %>% select(-yield_mg_ha)
+)
+
+head(test_pred)
+
+write.csv(test_pred, "../Output/test_pred_gam.csv", row.names = FALSE)
+```
+
