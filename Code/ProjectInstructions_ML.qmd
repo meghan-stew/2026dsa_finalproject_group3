@@ -976,7 +976,7 @@ gam_fit <- gam(
     s(gdd10_apr_sep, k = 5) +
     s(mean_srad, k = 5) +
     s(mean_vp, k = 5) +
-    site + year + previous_crop,
+    site + year,
   data = corn_train,
   method = "REML"
 )
@@ -1022,7 +1022,7 @@ yield_mg_ha = corn_test$yield_mg_ha
 ```
 
 ```{r test metrics}
-#Viewing TRAIN GAM Metrics 
+#Viewing TEST GAM Metrics 
 
 metric_set(rmse, rsq)(corn_test_preds, truth = yield_mg_ha, estimate = .pred)
 
