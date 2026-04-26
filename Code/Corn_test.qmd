@@ -303,7 +303,83 @@ test_pred <- predict(
 
 head(test_pred)
 test_pred
+write.csv(test_pred, "../Output/test_pred.csv", row.names = FALSE)
+```
+
+```{r checking xgboost covariates}
+xgb_vars <- c(
+  "hybrid",
+  "site",
+  "year",
+  "previous_crop",
+  "total_prcp",
+  "prcp_apr_sep",
+  "prcp_may_jul",
+  "prcp_aug",
+  "mean_tmean",
+  "mean_tmax",
+  "mean_tmin",
+  "tmean_apr_sep",
+  "tmax_jul",
+  "total_gdd10",
+  "gdd10_apr_sep",
+  "mean_srad",
+  "mean_vp",
+  "mean_dayl"
+)
+
+complete_idx <- complete.cases(final_test[, xgb_vars])
+
+table(complete_idx)
+
+colSums(is.na(final_test[, xgb_vars]))
 ```
 
 
+```{r xgboost test set predictions}
+xgb_preds <- rep(NA_real_, nrow(final_test))
+
+xgb_preds[complete_idx] <- predict(
+  final_corn_trainer,
+  new_data = final_test[complete_idx, ] %>% select(-yield_mg_ha)
+) %>%
+  pull(.pred)
+
+final_test$xgb_pred <- xgb_preds
+final_test$has_complete_xgb_vars <- complete_idx
+
+summary(final_test$xgb_pred)
+head(final_test$xgb_pred)
+head(xgb_preds)
+```
+
+
+```{r saving xgboost predictions}
+final_corn_xgb <- final_test %>%
+  transmute(
+    year,
+    site,
+    hybrid,
+    yield_mg_ha = xgb_pred
+  )
+
+final_corn_xgb
+
+write_csv(final_corn_xgb, "../Output/testing_submission_XGBoost_preds.csv")
+```
+
+```{r}
+final_corn_xgb <- final_test %>%
+  transmute(
+    year,
+    site,
+    hybrid,
+    yield_mg_ha = xgb_pred
+  ) %>%
+  distinct()
+
+nrow(final_corn_xgb)
+
+write_csv(final_corn_xgb, "../Output/testing_submission_XGBoost_preds.csv")
+```
 
