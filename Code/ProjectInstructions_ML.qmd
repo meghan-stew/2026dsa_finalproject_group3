@@ -1052,8 +1052,23 @@ saveRDS(gam_fit, "../Data/gam_fit.rds")
 
 ```
 
+#Sources For Project:
+1. https://www.rdocumentation.org/packages/mgcv/versions/1.9-4/topics/predict.gam 
+2. https://rdrr.io/cran/mgcv/man/missing.data.html
+3. https://www.r-bloggers.com/2021/03/how-to-solve-common-problems-with-gams/
+4. https://nrennie.rbind.io/blog/forecasting-gams-questions/
+5. https://stat.ethz.ch/R-manual/R-devel/library/mgcv/help/gam.html
+6. https://m-clark.github.io/generalized-additive-models/application.html
+7. https://www.geeksforgeeks.org/r-language/generalized-additive-models-using-r/
+8. https://stat.ethz.ch/R-manual/R-devel/RHOME/library/mgcv/html/gam.selection.html
+9. https://dplyr.tidyverse.org/reference/rename.html
+10. https://www.datanovia.com/en/lessons/rename-data-frame-columns-in-r/
+11. https://readr.tidyverse.org/reference/write_delim.html
+12. https://stackoverflow.com/questions/40120179/saving-data-frame-to-csv-with-column-names-as-strings-in-r
+13. https://workflows.tidymodels.org/
 
-
+AI LLM model used for building shinyapp: Claude 4.0 
+AI used for troubleshooting code: perplexity best model and google notebook LM referencing class notes
 
 ```{r}
 knitr::purl("ProjectInstructions_ML.qmd", output = "sapelo_script.R", documentation = 0)
