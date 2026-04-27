@@ -328,6 +328,7 @@ xgb_vars <- c(
   "mean_dayl"
 )
 
+#complete.cases  employed here for data cleaning so it only selects rows without NA. Only added it because of issues during running the model before this. 
 complete_idx <- complete.cases(final_test[, xgb_vars])
 
 table(complete_idx)

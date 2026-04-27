@@ -551,9 +551,9 @@ cat("\\nCreate recipe for data preprocessing\\n")
 
 corn_recipe <- recipe(yield_mg_ha ~ ., data = corn_train) %>%
   
-  step_novel(all_nominal_predictors()) %>%
-  step_unknown(all_nominal_predictors()) %>%
-  step_dummy(all_nominal_predictors()) %>%
+  step_novel(all_nominal_predictors()) %>% #handles novel/unseen factors
+  step_unknown(all_nominal_predictors()) %>% #used for handling NA values if they appear
+  step_dummy(all_nominal_predictors()) %>% #used to convert nominal data into binary for ML 
   step_zv(all_predictors()) # for zero variance variables 
 
 corn_prep <- corn_recipe %>%
@@ -999,6 +999,8 @@ gam_fit <- gam(
 )
 
 #used this instead of recipe that didn't work. 
+#feature note: hybrid was removed from this final model training chunk because it was not running with this factor included. 
+
 ```
 
 

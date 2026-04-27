@@ -19,6 +19,7 @@ library(mgcv)
 ```
 
 #Making Test Set
+
 ```{r defining test set }
 test <- read_csv("../Data/testing/testing_submission_model2.csv") %>%
   mutate(site = substr(site, 1, 4))
@@ -39,7 +40,9 @@ test <- test %>% rename_with(tolower)
 meta <- meta %>% rename_with(tolower)
 soil <- soil %>% rename_with(tolower)
 ```
+
 #Making data_full
+
 ```{r making full dataset }
 
 data_full <- test %>%
@@ -55,7 +58,9 @@ data_model <- data_full %>%
   )
 
 ```
+
 #Daymet Pull
+
 ```{r site-year format for weather pull}
 
 site_years <- meta %>%
@@ -106,7 +111,9 @@ weather_daily <- purrr::pmap_dfr(
 write.csv(weather_daily, "../Data/weather_daily_test.csv", row.names = FALSE)
 
 ```
+
 #Weather Feature Engineering
+
 ```{r feature engineering weather }
 weather_features <- weather_daily %>%
   mutate(
@@ -186,7 +193,6 @@ mutate(site = as.character(site))
 
 ```
 
-
 ```{r joining data in weather and final test data}
 data_model_weather <- data_model %>%
 left_join(site_weather_means, by = "site")
@@ -213,13 +219,13 @@ final_test <- final_test %>%
 
 ```
 
-
 ```{r}
 colSums(is.na(final_test[, c(
 "prcp_apr_sep","prcp_aug","mean_tmean","tmax_jul",
 "gdd10_apr_sep","mean_srad","mean_vp"
 )]))
 ```
+
 ```{r troubleshooting chunk for NAs}
 str(data_model[, c("site","year")])
 str(weather_features[, c("site","year")])
@@ -246,17 +252,18 @@ corn_train <- read_csv("../Data/final_data.csv", show_col_types = FALSE) %>%
   drop_na()
 ```
 
-
 ```{r gam_fit defined}
 gam_fit <- readRDS("../Data/gam_fit.rds")
 
 mf_train <- gam_fit$model
 
-train_year_levels  <- levels(mf_train$year)            # "2014"..."2023"
+train_year_levels  <- levels(mf_train$year)            # trying to make levels the same to avoid merge errors with the data
 train_site_levels  <- c(levels(mf_train$site), "Unknown_site")
 train_site_levels  <- unique(train_site_levels)
 
-# Use 2023 (last training set year) as proxy for 2024
+# Use 2023 (last training set year) as proxy for 2024: did this because GAM cannot predict on the 2024 test set so I will let it predict based on approximating it from the previous year's conditions. 
+
+
 proxy_year <- tail(train_year_levels, 1)
 
 # 2. Rebuild year in final_test:
@@ -272,7 +279,6 @@ final_test <- final_test %>%
 
 
 ```
-
 
 ```{r test data alignment}
 # Align site & previous_crop 
@@ -293,8 +299,6 @@ colSums(is.na(final_test[, c(
 )]))
 ```
 
-
-
 ```{r checking covariates}
 complete_idx <- complete.cases(final_test[, c(
   "prcp_apr_sep","prcp_aug","mean_tmean","tmax_jul",
@@ -302,9 +306,14 @@ complete_idx <- complete.cases(final_test[, c(
   "site","year"
 )])
 
+#again, used this for dropping NA cells from final test set.
+
+
 table(complete_idx)
 ```
+
 #Predicting on Test Set
+
 ```{r test set predictions}
 gam_preds <- rep(NA_real_, nrow(final_test))
 gam_preds[complete_idx] <- predict(
@@ -321,6 +330,7 @@ head(final_test$gam_pred)
 
 head(gam_preds)
 ```
+
 ```{r saving predictions}
 final_corn_gam <- final_test %>%
   transmute(
@@ -330,11 +340,9 @@ final_corn_gam <- final_test %>%
     yield_mg_ha = gam_pred
   )
 
-#used transmute instead of mutate and select like in class because it didn't work for keeping the yield column name. 
+#used transmute instead of mutate and select like in class because it didn't work for keeping the yield column name in the final csv. 
+
 final_corn_gam
   
 write_csv(final_corn_gam, "../Output/testing_submission_GAM_preds.csv")
 ```
-
-
-
