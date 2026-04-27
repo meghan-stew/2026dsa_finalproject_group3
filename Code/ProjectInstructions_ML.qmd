@@ -140,6 +140,7 @@ Once each team submits their predictions on my test set, I will compare their pr
 
 The team that gets the highest **R2** or lowest **RMSE** will receive an award and bragging rights.  
 
+#Data Load-In
 
 ```{r Loading the data}
 library(tidyverse)
@@ -182,6 +183,7 @@ summary(data_full)
 setdiff(meta$site, train$site)
 
 ```
+#Checking Missing Values 
 
 
 ```{r Number of missing values}
@@ -208,7 +210,7 @@ data_model <- data_model %>%
 
 ```
 
-```{r}
+```{r defining year as character for when needed}
  data_model <- data_model %>%
   mutate(
 year_dbl = as.double(year)) %>%
@@ -218,6 +220,7 @@ year_dbl = as.double(year)) %>%
 
 ```
 
+#Exploring the Data
 
 
 ```{r Year and site as factors}
@@ -267,7 +270,7 @@ ggplot(data_model, aes(x = hybrid, y = yield_mg_ha)) +
   theme(axis.text.x = element_blank())
 ```
 
-```{r}
+```{r looking at top hybrids}
 top_hybrids <- data_model %>%
   group_by(hybrid) %>%
   summarise(n = n()) %>%
@@ -402,6 +405,7 @@ weather_features <- weather_daily %>%
     tmean = (tmax + tmin) / 2,
     gdd10 = pmax(tmean - 10, 0)
   ) %>%
+  # making new variables by taking sums and means where appropriate below: 
   group_by(site, year) %>%
   summarise(
     total_prcp = sum(prcp, na.rm = TRUE),
@@ -538,7 +542,7 @@ ggsave(plot = density_plot,
 ```
 ##XG Boost Recipe
 
-rpubs.com used as source below
+
 ```{r preprocessing-recipe}
 # Data Preprocessing (Recipe)
 
@@ -556,7 +560,12 @@ corn_prep <- corn_recipe %>%
   prep()
 
 corn_prep
+
+
+
 ```
+
+
 ```{r xgboost-specification}
 
 # XGBoost Model Specification
@@ -572,7 +581,11 @@ xgb_spec <- boost_tree(
 
 xgb_spec
 ```
+
+
 ```{r cross-validation}
+
+#making workflow first to keep using model and recipe together
 
 xgb_wf <- workflow() %>%
   add_model(xgb_spec) %>%
@@ -591,6 +604,8 @@ resampling_foldcv <- vfold_cv(
 
 resampling_foldcv
 ```
+
+
 ##Hyperparameter Grid
 ```{r hyperparameter-grid}
 # Hyperparameter Grid for XGBoost
@@ -621,7 +636,7 @@ xgb_grid
 #xgb_grid
 ```
 
-##Parallel Processing and ANOVA Racing
+##Parallel Processing and Metric Exploration
 
 
 ```{r ANOvaracing}
@@ -862,7 +877,7 @@ ggsave(plot = publication_corn,
 ```
 ##XG Boost Variable Importance: 
 
-```{r}
+```{r variable importance}
 vip <- final_corn %>%
   fit(yield_mg_ha ~ .,
          data = bake(corn_prep, corn_train)) %>% 
@@ -961,6 +976,8 @@ gam_corn_spec <- gen_additive_mod() %>%
     #  site + year + hybrid + previous_crop
  # )
 
+
+#this didn't work but the attempt has been left for your review. 
 ```
 
 
@@ -981,7 +998,7 @@ gam_fit <- gam(
   method = "REML"
 )
 
-
+#used this instead of recipe that didn't work. 
 ```
 
 
